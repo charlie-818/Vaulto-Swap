@@ -21,7 +21,7 @@ export default function RestrictionBanner({ isRestricted, onToggle }: Restrictio
       >
         <div className="container mx-auto px-4 py-2">
           <p className="text-white text-xs">
-            You are accessing our products and services from a restricted jurisdiction. We do not allow access from certain jurisdictions including locations subject to sanctions restrictions and other jurisdictions where our services are ineligible for use.
+            Access restricted: Services unavailable in sanctioned jurisdictions and certain restricted locations.
           </p>
         </div>
       </motion.div>
