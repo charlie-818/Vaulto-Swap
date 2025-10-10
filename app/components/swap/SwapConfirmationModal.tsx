@@ -88,7 +88,7 @@ export default function SwapConfirmationModal({
               <div className="space-y-3 mb-6">
                 {/* From Token */}
                 <div className="glass rounded-xl p-4">
-                  <div className="text-xs text-gray-400 mb-2">You're Sending</div>
+                  <div className="text-xs text-gray-400 mb-2">You&apos;re Sending</div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10">
@@ -134,7 +134,7 @@ export default function SwapConfirmationModal({
                 {/* To Token */}
                 <div className="glass rounded-xl p-4">
                   <div className="text-xs text-gray-400 mb-2">
-                    {orderType === "limit" ? "You'll Receive (when filled)" : "You're Receiving"}
+                    {orderType === "limit" ? "You&apos;ll Receive (when filled)" : "You&apos;re Receiving"}
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
