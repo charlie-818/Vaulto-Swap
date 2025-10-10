@@ -4,10 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface RestrictionBannerProps {
   isRestricted: boolean;
-  onToggle?: () => void; // For testing purposes
 }
 
-export default function RestrictionBanner({ isRestricted, onToggle }: RestrictionBannerProps) {
+export default function RestrictionBanner({ isRestricted }: RestrictionBannerProps) {
   if (!isRestricted) return null;
 
   return (

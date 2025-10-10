@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SwapInterface from "./components/swap/SwapInterface";
 import RestrictionBanner from "./components/RestrictionBanner";
 import Image from "next/image";
@@ -10,7 +10,20 @@ import { useAccount } from "wagmi";
 export default function Home() {
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
-  const [isRestricted, setIsRestricted] = useState(true); // Restricted by default, can be toggled off
+  const [isRestricted, setIsRestricted] = useState(false); // Default to allowed during loading
+
+  // Check user's location on mount
+  useEffect(() => {
+    fetch('/api/check-location')
+      .then(res => res.json())
+      .then(data => {
+        setIsRestricted(data.isRestricted || false);
+      })
+      .catch(error => {
+        console.error('Failed to check location:', error);
+        setIsRestricted(false); // Default to allowed on error
+      });
+  }, []);
   return (
     <main className="relative bg-gradient-to-br from-black via-gray-900 to-black pb-0">
       {/* Subtle Gold Gradient Overlays */}
@@ -44,9 +57,8 @@ export default function Home() {
                   alt="Vaulto Swap - Tokenized Stock Trading Platform Logo" 
                   width={160} 
                   height={50}
-                  className="object-contain cursor-pointer transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(251,191,36,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]"
+                  className="object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(251,191,36,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]"
                   priority
-                  onDoubleClick={() => setIsRestricted(!isRestricted)}
                 />
               </div>
               <nav aria-label="Main navigation" className="hidden md:block">
@@ -104,10 +116,7 @@ export default function Home() {
       </header>
 
       {/* Restriction Banner */}
-      <RestrictionBanner 
-        isRestricted={isRestricted} 
-        onToggle={() => setIsRestricted(false)} 
-      />
+      <RestrictionBanner isRestricted={isRestricted} />
 
       <div className="relative z-10 container mx-auto px-4 flex items-center justify-center min-h-[calc(100vh-140px)]">
         <section aria-label="Token swap interface">
