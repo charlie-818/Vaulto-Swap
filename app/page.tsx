@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import SwapInterface from "./components/swap/SwapInterface";
+import RestrictionBanner from "./components/RestrictionBanner";
 import Image from "next/image";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { useAccount } from "wagmi";
@@ -113,6 +114,8 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      <RestrictionBanner isRestricted={isRestricted} />
 
       <div className="relative z-10 container mx-auto px-4 flex items-center justify-center min-h-[calc(100vh-140px)]">
         <section aria-label="Token swap interface">
