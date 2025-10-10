@@ -93,7 +93,7 @@ export default function SwapConfirmationModal({
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10">
                         <Image
-                          src={fromToken.logo}
+                          src={fromToken.logoURI || '/usdc.png'}
                           alt={fromToken.symbol}
                           fill
                           className="rounded-full object-cover"
@@ -140,7 +140,7 @@ export default function SwapConfirmationModal({
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10">
                         <Image
-                          src={toToken.logo}
+                          src={toToken.logoURI || '/usdc.png'}
                           alt={toToken.symbol}
                           fill
                           className="rounded-full object-cover"
