@@ -16,7 +16,7 @@ export default function RestrictionBanner({ isRestricted }: RestrictionBannerPro
         animate={{ opacity: 1, height: "auto" }}
         exit={{ opacity: 0, height: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-red-600 border-b border-red-700"
+        className="bg-red-600"
       >
         <div className="container mx-auto px-4 py-2">
           <p className="text-white text-xs">
