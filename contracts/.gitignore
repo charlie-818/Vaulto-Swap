@@ -1,0 +1,17 @@
+node_modules
+.env
+.env.test
+
+# Hardhat files
+cache
+artifacts
+typechain
+typechain-types
+
+# Coverage
+coverage
+coverage.json
+
+# Gas reporter
+gasReporterOutput.json
+
