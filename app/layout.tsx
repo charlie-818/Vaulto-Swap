@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.png",
-    apple: "/logo.png",
+    apple: "/favicon.png",
   },
   openGraph: {
     type: "website",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     siteName: "Vaulto Swap",
     images: [
       {
-        url: "/logo.png",
+        url: "/favicon.png",
         width: 1200,
         height: 630,
         alt: "Vaulto Swap - Tokenized Stock Trading",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     description: "Swap stablecoins for tokenized stocks seamlessly. Trade TSLA, AAPL, GOOGL, AMZN, and MSFT tokens with USDT, USDC, and DAI.",
     creator: "@vaultoai",
     site: "@vaultoai",
-    images: ["/logo.png"],
+    images: ["/favicon.png"],
   },
   robots: {
     index: true,
@@ -106,7 +106,7 @@ export default function RootLayout({
       "@type": "Organization",
       "name": "Vaulto",
       "url": "https://vaulto.ai",
-      "logo": "https://swap.vaulto.ai/logo.png",
+      "logo": "https://swap.vaulto.ai/favicon.png",
       "sameAs": [
         "https://twitter.com/vaultoai",
         "https://instagram.com/vaultoai",
