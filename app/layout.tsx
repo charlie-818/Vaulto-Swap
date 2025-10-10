@@ -12,8 +12,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://swap.vaulto.ai'),
   title: {
-    default: "Vaulto Swap | Private Tokenized Stock Trading Platform",
-    template: "%s | Vaulto Swap"
+    default: "Vaulto | Private Investing",
+    template: "%s | Vaulto"
   },
   description: "Swap stablecoins for tokenized stocks seamlessly on Vaulto Swap. Trade TSLA, AAPL, GOOGL, AMZN, and MSFT tokens with USDT, USDC, and DAI. Secure, compliant, and private DeFi investing.",
   keywords: [

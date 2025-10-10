@@ -10,11 +10,28 @@ import { useAccount } from "wagmi";
 export default function Home() {
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
-  const [isRestricted, setIsRestricted] = useState(false); // Toggle this to test restriction
+  const [isRestricted, setIsRestricted] = useState(true); // Restricted by default, can be toggled off
   return (
-    <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col">
+    <main className="relative bg-gradient-to-br from-black via-gray-900 to-black pb-0">
+      {/* Subtle Gold Gradient Overlays */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Top-left gold glow */}
+        <div className="absolute -top-32 -left-32 w-[800px] h-[800px]">
+          <div className="w-full h-full bg-gradient-to-br from-amber-500/30 via-yellow-600/20 to-transparent blur-3xl"></div>
+        </div>
+        
+        {/* Top-right gold glow */}
+        <div className="absolute -top-32 -right-32 w-[700px] h-[700px]">
+          <div className="w-full h-full bg-gradient-to-bl from-yellow-500/25 via-amber-500/15 to-transparent blur-3xl"></div>
+        </div>
+        
+        {/* Bottom center gold shimmer */}
+        <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[900px] h-[900px]">
+          <div className="w-full h-full bg-gradient-to-t from-amber-600/30 via-yellow-500/15 to-transparent blur-3xl"></div>
+        </div>
+      </div>
       {/* Header */}
-      <header className="border-b border-amber-500/20" role="banner">
+      <header className="relative z-10 border-b border-amber-500/20" role="banner">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
@@ -23,8 +40,9 @@ export default function Home() {
                 alt="Vaulto Swap - Tokenized Stock Trading Platform Logo" 
                 width={120} 
                 height={40}
-                className="object-contain"
+                className="object-contain cursor-pointer"
                 priority
+                onDoubleClick={() => setIsRestricted(!isRestricted)}
               />
               <nav aria-label="Main navigation">
                 <ul className="flex items-center gap-6">
@@ -53,17 +71,7 @@ export default function Home() {
             </div>
             
             {/* Connect Wallet Button */}
-            <div className="flex items-center gap-3">
-              {/* Toggle button for testing (remove in production) */}
-              <button
-                onClick={() => setIsRestricted(!isRestricted)}
-                className="px-6 py-2.5 rounded-lg text-xs font-medium bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all"
-                title="Toggle restriction (testing only)"
-              >
-                {isRestricted ? "Unrestrict" : "Restrict"}
-              </button>
-              
-              <button
+            <button
                 onClick={() => !isRestricted && open()}
                 disabled={isRestricted}
                 className={`px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg ${
@@ -75,8 +83,7 @@ export default function Home() {
                 {isConnected && address
                   ? `${address.slice(0, 6)}...${address.slice(-4)}`
                   : "Connect"}
-              </button>
-            </div>
+            </button>
           </div>
         </div>
       </header>
@@ -87,7 +94,7 @@ export default function Home() {
         onToggle={() => setIsRestricted(false)} 
       />
 
-      <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+      <div className="relative z-10 container mx-auto px-4 flex items-center justify-center min-h-[calc(100vh-140px)]">
         <section aria-label="Token swap interface">
           <h1 className="sr-only">Vaulto Swap - Trade Tokenized Stocks with Stablecoins</h1>
           <SwapInterface isRestricted={isRestricted} />
@@ -95,7 +102,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-amber-500/20" role="contentinfo">
+      <footer className="relative border-t border-amber-500/20 bg-black z-10" role="contentinfo">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Social Media Links */}
@@ -188,6 +195,36 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Private Markets Section */}
+      <section className="relative z-10 w-full bg-black pt-24 pb-0 overflow-hidden">
+        <div className="container mx-auto px-4">
+          {/* Section Header */}
+          <div className="text-center">
+            <h2 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 mb-1">
+              Private Markets, Public Access
+            </h2>
+            <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-2">
+              Unlock institutional-grade investment opportunities through tokenized securities
+            </p>
+            <p className="text-amber-500 text-xl md:text-2xl font-semibold">
+              Coming Soon
+            </p>
+          </div>
+
+          {/* Private Markets Image */}
+          <div className="flex justify-center -mt-56 -mb-80">
+            <Image
+              src="/private.avif"
+              alt="Private Markets Access"
+              width={800}
+              height={800}
+              className="w-full max-w-4xl h-auto"
+              priority
+            />
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
