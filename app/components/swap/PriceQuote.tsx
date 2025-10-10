@@ -117,11 +117,11 @@ export default function PriceQuote({
         animate={{ opacity: 1, height: "auto" }}
         exit={{ opacity: 0, height: 0 }}
         transition={{ duration: 0.3 }}
-        className="mb-4 overflow-hidden"
+        className="mb-2 overflow-hidden"
         style={{ width: "100%" }}
       >
-        <div className="glass rounded-xl p-4 border-l-4 border-red-500" style={{ width: "100%" }}>
-          <div className="flex items-center gap-2 text-red-400 text-sm">
+        <div className="glass rounded-xl p-2.5 border-l-4 border-red-500" style={{ width: "100%" }}>
+          <div className="flex items-center gap-2 text-red-400 text-[10px]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -150,11 +150,11 @@ export default function PriceQuote({
         animate={{ opacity: 1, height: "auto" }}
         exit={{ opacity: 0, height: 0 }}
         transition={{ duration: 0.3 }}
-        className="mb-4 overflow-hidden"
+        className="mb-2 overflow-hidden"
         style={{ width: "100%" }}
       >
-        <div className="glass rounded-xl p-4" style={{ width: "100%" }}>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
+        <div className="glass rounded-xl p-2.5" style={{ width: "100%" }}>
+          <div className="flex items-center gap-2 text-gray-400 text-[10px]">
             <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
             Fetching best price...
           </div>
@@ -171,25 +171,24 @@ export default function PriceQuote({
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.3 }}
-      className="mb-4 overflow-hidden"
+      className="mb-2 overflow-hidden"
       style={{ width: "100%" }}
     >
-      <div className="glass rounded-xl p-4 space-y-2" style={{ width: "100%" }}>
-        <div className="flex items-center justify-between text-sm">
+      <div className="glass rounded-xl p-2.5 space-y-1.5" style={{ width: "100%" }}>
+        <div className="flex items-center justify-between text-[10px]">
           <span className="text-gray-400">Rate</span>
           <span className="text-white font-semibold">
             1 {fromToken.symbol} = {parseFloat(quote.rate).toFixed(6)} {toToken.symbol}
           </span>
         </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400">Liquidity Source</span>
-          <span className="text-amber-500 font-medium">{quote.source}</span>
-        </div>
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>Price updates every 10s</span>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>Live</span>
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-gray-400">Source</span>
+          <div className="flex items-center gap-2">
+            <span className="text-amber-500 font-medium">{quote.source}</span>
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-gray-500 text-[9px]">Live</span>
+            </div>
           </div>
         </div>
       </div>

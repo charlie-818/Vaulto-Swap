@@ -16,44 +16,50 @@ export default function Home() {
       {/* Subtle Gold Gradient Overlays */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {/* Top-left gold glow */}
-        <div className="absolute -top-32 -left-32 w-[800px] h-[800px]">
-          <div className="w-full h-full bg-gradient-to-br from-amber-500/30 via-yellow-600/20 to-transparent blur-3xl"></div>
+        <div className="absolute -top-32 -left-32 w-[800px] h-[800px] animate-[float_20s_ease-in-out_infinite]">
+          <div className="w-full h-full bg-gradient-to-br from-amber-500/15 via-yellow-600/10 to-transparent blur-3xl"></div>
         </div>
         
         {/* Top-right gold glow */}
-        <div className="absolute -top-32 -right-32 w-[700px] h-[700px]">
-          <div className="w-full h-full bg-gradient-to-bl from-yellow-500/25 via-amber-500/15 to-transparent blur-3xl"></div>
+        <div className="absolute -top-32 -right-32 w-[700px] h-[700px] animate-[float_25s_ease-in-out_infinite_reverse]">
+          <div className="w-full h-full bg-gradient-to-bl from-yellow-500/12 via-amber-500/8 to-transparent blur-3xl"></div>
         </div>
         
         {/* Bottom center gold shimmer */}
-        <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[900px] h-[900px]">
-          <div className="w-full h-full bg-gradient-to-t from-amber-600/30 via-yellow-500/15 to-transparent blur-3xl"></div>
+        <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[900px] h-[900px] animate-[pulse_30s_ease-in-out_infinite]">
+          <div className="w-full h-full bg-gradient-to-t from-amber-600/15 via-yellow-500/8 to-transparent blur-3xl"></div>
         </div>
       </div>
       {/* Header */}
-      <header className="relative z-10 border-b border-amber-500/20" role="banner">
-        <div className="container mx-auto px-4 py-6">
+      <header className="sticky top-0 z-50 border-b border-amber-500/30 backdrop-blur-xl bg-black/40 shadow-lg shadow-amber-500/5" role="banner">
+        {/* Subtle gold glow at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+        
+        <div className="container mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Image 
-                src="/logo.png" 
-                alt="Vaulto Swap - Tokenized Stock Trading Platform Logo" 
-                width={120} 
-                height={40}
-                className="object-contain cursor-pointer"
-                priority
-                onDoubleClick={() => setIsRestricted(!isRestricted)}
-              />
-              <nav aria-label="Main navigation">
-                <ul className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
+              <div className="relative group">
+                <Image 
+                  src="/logo.png" 
+                  alt="Vaulto Swap - Tokenized Stock Trading Platform Logo" 
+                  width={160} 
+                  height={50}
+                  className="object-contain cursor-pointer transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(251,191,36,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]"
+                  priority
+                  onDoubleClick={() => setIsRestricted(!isRestricted)}
+                />
+              </div>
+              <nav aria-label="Main navigation" className="hidden md:block">
+                <ul className="flex items-center gap-3">
                   <li>
                     <a 
                       href="https://vaulto.fi" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-sm text-gray-400 hover:text-amber-500 transition-colors"
+                      className="relative text-sm font-semibold text-gray-300 hover:text-white px-4 py-2 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-yellow-500/20 hover:shadow-lg hover:shadow-amber-500/20 group"
                     >
-                      Search
+                      <span className="relative z-10">Search</span>
+                      <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 blur-sm"></div>
                     </a>
                   </li>
                   <li>
@@ -61,9 +67,10 @@ export default function Home() {
                       href="https://vaulto.holdings" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-sm text-gray-400 hover:text-amber-500 transition-colors"
+                      className="relative text-sm font-semibold text-gray-300 hover:text-white px-4 py-2 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-yellow-500/20 hover:shadow-lg hover:shadow-amber-500/20 group"
                     >
-                      Holdings
+                      <span className="relative z-10">Holdings</span>
+                      <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 blur-sm"></div>
                     </a>
                   </li>
                 </ul>
@@ -71,19 +78,27 @@ export default function Home() {
             </div>
             
             {/* Connect Wallet Button */}
-            <button
+            <div className="flex items-center gap-3">
+              <button
                 onClick={() => !isRestricted && open()}
                 disabled={isRestricted}
-                className={`px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg ${
+                className={`relative px-6 py-3 rounded-lg font-bold transition-all duration-300 overflow-hidden ${
                   isRestricted
-                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white cursor-not-allowed opacity-90"
-                    : "bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-black hover:shadow-xl transform hover:scale-105"
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white cursor-not-allowed opacity-90 shadow-lg shadow-red-500/20"
+                    : "bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-xl shadow-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/40 transform hover:scale-105 hover:from-yellow-400 hover:to-amber-500"
                 }`}
               >
-                {isConnected && address
-                  ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                  : "Connect"}
-            </button>
+                {/* Animated gradient border effect */}
+                {!isRestricted && (
+                  <div className="absolute inset-0 rounded-lg opacity-75 blur-md bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 animate-pulse"></div>
+                )}
+                <span className="relative z-10">
+                  {isConnected && address
+                    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                    : "Connect Wallet"}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </header>

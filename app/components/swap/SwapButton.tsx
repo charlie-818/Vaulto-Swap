@@ -19,6 +19,7 @@ interface SwapButtonProps {
   disabled?: boolean;
   orderType?: "market" | "limit";
   limitPrice?: string;
+  onSwapClick?: () => void;
 }
 
 export default function SwapButton({
@@ -34,6 +35,7 @@ export default function SwapButton({
   disabled = false,
   orderType = "market",
   limitPrice = "",
+  onSwapClick,
 }: SwapButtonProps) {
   const [isSwapping, setIsSwapping] = useState(false);
 
@@ -152,7 +154,12 @@ export default function SwapButton({
     if (!isConnected) {
       onConnect();
     } else {
-      handleSwap();
+      // Show confirmation modal if provided, otherwise execute swap directly
+      if (onSwapClick) {
+        onSwapClick();
+      } else {
+        handleSwap();
+      }
     }
   };
 
@@ -162,7 +169,7 @@ export default function SwapButton({
       whileTap={!isDisabled ? { scale: 0.98 } : {}}
       onClick={handleClick}
       disabled={isDisabled && isConnected}
-      className={`w-full py-4 rounded-xl font-semibold transition-all ${
+      className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
         isDisabled && isConnected
           ? "bg-gray-600 cursor-not-allowed opacity-50 text-gray-400"
           : "bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 shadow-lg hover:shadow-xl text-black"

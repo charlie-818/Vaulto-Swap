@@ -71,8 +71,8 @@ export default function AmountInput({
     : "0.00";
 
   return (
-    <div className="w-full glass rounded-xl p-4">
-      <div className="flex items-center justify-between mb-2">
+    <div className="w-full glass rounded-xl p-3">
+      <div className="flex items-center justify-between mb-1.5">
         <input
           type="text"
           value={inputValue}
@@ -80,19 +80,19 @@ export default function AmountInput({
           placeholder="0.0"
           readOnly={readOnly}
           disabled={!token}
-          className="text-2xl font-semibold bg-transparent border-none outline-none text-white placeholder-gray-600 w-full"
+          className="text-xl font-semibold bg-transparent border-none outline-none text-white placeholder-gray-600 w-full"
         />
         {!readOnly && isConnected && token && balance && (
           <button
             onClick={handleMaxClick}
-            className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-500 text-xs font-semibold hover:bg-amber-500/30 transition-all"
+            className="px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-500 text-xs font-semibold hover:bg-amber-500/30 transition-all"
           >
             MAX
           </button>
         )}
       </div>
       {isConnected && token && (
-        <div className="text-xs text-gray-400">
+        <div className="text-[10px] text-gray-400">
           Balance: {formattedBalance} {token.symbol}
         </div>
       )}
