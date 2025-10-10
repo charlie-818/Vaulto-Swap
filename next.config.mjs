@@ -3,9 +3,23 @@ const nextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
-  webpack: (config) => {
-    config.resolve.fallback = { fs: false, net: false, tls: false };
-    config.externals.push('pino-pretty', 'encoding');
+  webpack: (config, { isServer }) => {
+    config.resolve.fallback = { 
+      ...config.resolve.fallback,
+      fs: false, 
+      net: false, 
+      tls: false,
+      '@react-native-async-storage/async-storage': false
+    };
+    
+    // Push externals to prevent bundling of unnecessary packages
+    config.externals.push('pino-pretty', 'encoding', '@react-native-async-storage/async-storage');
+    
+    // Ignore React Native modules during build
+    config.ignoreWarnings = [
+      { module: /@react-native-async-storage\/async-storage/ }
+    ];
+    
     return config;
   },
   headers: async () => {
