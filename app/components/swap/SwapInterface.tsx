@@ -16,7 +16,6 @@ import PriceImpact from "./PriceImpact";
 import QuickAmountButtons from "./QuickAmountButtons";
 import SwapStats from "./SwapStats";
 import SwapConfirmationModal from "./SwapConfirmationModal";
-import MarketExecutionInfo from "./MarketExecutionInfo";
 import { Token, getStablecoins, getTokenizedStocks } from "@/config/tokens";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -118,9 +117,17 @@ export default function SwapInterface({ isRestricted = false }: SwapInterfacePro
     <div className="mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="glass-strong rounded-2xl p-6 shadow-2xl w-[540px]"
+        animate={{ 
+          opacity: 1, 
+          y: 0,
+          height: orderType === "market" ? "auto" : "auto"
+        }}
+        transition={{ 
+          opacity: { duration: 0.5 },
+          y: { duration: 0.5 },
+          height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
+        }}
+        className="glass-strong rounded-2xl p-6 shadow-2xl w-[540px] overflow-hidden"
       >
         {/* Header with Settings */}
         <div className="flex items-center justify-between mb-3">
@@ -219,16 +226,22 @@ export default function SwapInterface({ isRestricted = false }: SwapInterfacePro
           />
         </div>
 
-        {/* Dynamic Info Section - Same height for both market and limit */}
-        <div className="min-h-[140px]">
+        {/* Dynamic Info Section with Accordion Effect */}
+        <motion.div 
+          animate={{ 
+            height: orderType === "market" ? "auto" : "auto",
+            marginBottom: orderType === "market" ? "0.5rem" : "0.5rem"
+          }}
+          transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+        >
           <AnimatePresence mode="wait">
             {orderType === "limit" ? (
               <motion.div
                 key="limit-section"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
               >
                 {/* Limit Price Input */}
                 {fromToken && toToken && (
@@ -257,22 +270,12 @@ export default function SwapInterface({ isRestricted = false }: SwapInterfacePro
             ) : (
               <motion.div
                 key="market-section"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                className="space-y-2"
               >
-                {/* Market Execution Info */}
-                {fromToken && toToken && (
-                  <MarketExecutionInfo
-                    fromToken={fromToken}
-                    toToken={toToken}
-                    fromAmount={fromAmount}
-                    currentRate={currentMarketPrice}
-                    liquidityDepth="high"
-                  />
-                )}
-
                 {/* Price Impact Warning */}
                 {priceImpact > 0 && fromAmount && (
                   <PriceImpact priceImpact={priceImpact} />
@@ -305,7 +308,7 @@ export default function SwapInterface({ isRestricted = false }: SwapInterfacePro
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         {/* Swap Button */}
         <div className="relative">

@@ -39,7 +39,8 @@ export default function TransactionSettings({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg glass hover:glass-strong transition-all text-sm"
+        className="flex items-center justify-center p-2 rounded-lg glass hover:glass-strong transition-all"
+        title="Transaction Settings"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +61,6 @@ export default function TransactionSettings({
             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
           />
         </svg>
-        <span className="text-gray-300">Settings</span>
       </button>
 
       <AnimatePresence>

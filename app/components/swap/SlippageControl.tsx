@@ -42,7 +42,8 @@ export default function SlippageControl({ slippage, onSlippageChange }: Slippage
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg glass hover:glass-strong transition-all text-sm"
+        className="flex items-center justify-center p-2 rounded-lg glass hover:glass-strong transition-all"
+        title={`Slippage: ${slippage}%`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -58,7 +59,6 @@ export default function SlippageControl({ slippage, onSlippageChange }: Slippage
             d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
           />
         </svg>
-        <span className="text-gray-300">Slippage: {slippage}%</span>
       </button>
 
       <AnimatePresence>
@@ -79,7 +79,7 @@ export default function SlippageControl({ slippage, onSlippageChange }: Slippage
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full left-0 mt-2 z-50 w-80 glass-strong rounded-xl p-4 shadow-2xl border border-gray-700"
+              className="absolute top-full right-0 mt-2 z-50 w-80 glass-strong rounded-xl p-4 shadow-2xl border border-gray-700"
             >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-white">Slippage Tolerance</h3>
