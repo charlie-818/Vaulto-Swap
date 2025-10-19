@@ -1,29 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import SwapInterface from "./components/swap/SwapInterface";
-import RestrictionBanner from "./components/RestrictionBanner";
 import Image from "next/image";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
-import { useAccount } from "wagmi";
+import dynamic from "next/dynamic";
+
+// Dynamically import the CoW widget to prevent SSR issues
+const CowSwapWidgetWrapper = dynamic(
+  () => import("./components/swap/CowSwapWidgetWrapper"),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="w-full max-w-4xl flex items-center justify-center h-[640px]">
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">Loading swap interface...</p>
+        </div>
+      </div>
+    )
+  }
+);
 
 export default function Home() {
-  const { open } = useWeb3Modal();
-  const { address, isConnected } = useAccount();
-  const [isRestricted, setIsRestricted] = useState(false); // Default to allowed during loading
-
-  // Check user's location on mount
-  useEffect(() => {
-    fetch('/api/check-location')
-      .then(res => res.json())
-      .then(data => {
-        setIsRestricted(data.isRestricted || false);
-      })
-      .catch(error => {
-        console.error('Failed to check location:', error);
-        setIsRestricted(false); // Default to allowed on error
-      });
-  }, []);
   return (
     <main className="relative bg-gradient-to-br from-black via-gray-900 to-black pb-0">
       {/* Subtle Gold Gradient Overlays */}
@@ -45,9 +40,6 @@ export default function Home() {
       </div>
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-amber-500/30 backdrop-blur-xl bg-black/40 shadow-lg shadow-amber-500/5" role="banner">
-        {/* Subtle gold glow at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-        
         <div className="container mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
@@ -87,40 +79,43 @@ export default function Home() {
                   </li>
                 </ul>
               </nav>
+              
+              {/* Mobile Navigation */}
+              <nav aria-label="Mobile navigation" className="md:hidden">
+                <ul className="flex items-center gap-2">
+                  <li>
+                    <a 
+                      href="https://vaulto.fi" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-gray-300 hover:text-white px-2 py-1 rounded transition-colors"
+                    >
+                      Search
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://vaulto.holdings" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-gray-300 hover:text-white px-2 py-1 rounded transition-colors"
+                    >
+                      Holdings
+                    </a>
+                  </li>
+                </ul>
+              </nav>
             </div>
             
-            {/* Connect Wallet Button */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => !isRestricted && open()}
-                disabled={isRestricted}
-                className={`relative px-6 py-3 rounded-lg font-bold transition-all duration-300 overflow-hidden ${
-                  isRestricted
-                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white cursor-not-allowed opacity-90 shadow-lg shadow-red-500/20"
-                    : "bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-xl shadow-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/40 transform hover:scale-105 hover:from-yellow-400 hover:to-amber-500"
-                }`}
-              >
-                {/* Animated gradient border effect */}
-                {!isRestricted && (
-                  <div className="absolute inset-0 rounded-lg opacity-75 blur-md bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 animate-pulse"></div>
-                )}
-                <span className="relative z-10">
-                  {isConnected && address
-                    ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                    : "Connect Wallet"}
-                </span>
-              </button>
-            </div>
+            {/* CoW Swap handles wallet connection internally */}
           </div>
         </div>
       </header>
 
-      <RestrictionBanner isRestricted={isRestricted} />
-
-      <div className="relative z-10 container mx-auto px-4 flex items-center justify-center min-h-[calc(100vh-140px)]">
-        <section aria-label="Token swap interface">
+      <div className="relative z-10 container mx-auto px-4 flex items-center justify-center min-h-[calc(100vh-200px)] py-8">
+        <section aria-label="Token swap interface" className="w-full">
           <h1 className="sr-only">Vaulto Swap - Trade Tokenized Stocks with Stablecoins</h1>
-          <SwapInterface isRestricted={isRestricted} />
+          <CowSwapWidgetWrapper />
         </section>
       </div>
 
@@ -223,26 +218,26 @@ export default function Home() {
       <section className="relative z-10 w-full bg-black pt-24 pb-0 overflow-hidden">
         <div className="container mx-auto px-4">
           {/* Section Header */}
-          <div className="text-center">
-            <h2 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 mb-1">
+          <div className="text-center px-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 mb-1">
               Private Markets, Public Access
             </h2>
-            <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-2">
+            <p className="text-gray-400 text-base sm:text-lg md:text-xl max-w-3xl mx-auto mb-2">
               Unlock institutional-grade investment opportunities through tokenized securities
             </p>
-            <p className="text-amber-500 text-xl md:text-2xl font-semibold">
+            <p className="text-amber-500 text-lg sm:text-xl md:text-2xl font-semibold">
               Coming Soon
             </p>
           </div>
 
           {/* Private Markets Image */}
-          <div className="flex justify-center -mt-56 -mb-80">
+          <div className="flex justify-center -mt-32 sm:-mt-40 md:-mt-56 -mb-40 sm:-mb-60 md:-mb-80">
             <Image
               src="/private.avif"
               alt="Private Markets Access"
               width={800}
               height={800}
-              className="w-full max-w-4xl h-auto"
+              className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl h-auto"
               priority
             />
           </div>
