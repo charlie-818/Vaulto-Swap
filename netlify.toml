@@ -7,3 +7,19 @@
 [build.environment]
   NODE_VERSION = "20.18.0"
 
+[[headers]]
+  for = "/vaulto-token-list.json"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
+    Content-Type = "application/json"
+
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
+    Content-Type = "application/json"
+
