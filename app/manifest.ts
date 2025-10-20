@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Vaulto Swap - Tokenized Stock Trading',
     short_name: 'Vaulto Swap',
-    description: 'Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT. Secure DeFi trading with CoW Protocol integration.',
+    description: 'Trade tokenized stocks with stablecoins on Vaulto Swap. Secure DeFi trading with CoW Protocol integration.',
     start_url: '/',
     display: 'standalone',
     background_color: '#000000',

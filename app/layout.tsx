@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: "Vaulto Swap",
     template: "%s | Vaulto Swap"
   },
-  description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT. Secure DeFi trading with CoW Protocol integration for optimal pricing and MEV protection.",
+  description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Secure DeFi trading with CoW Protocol integration for optimal pricing and MEV protection.",
   keywords: [
     "tokenized stocks",
     "DeFi trading",
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://app.vaulto.ai",
-    title: "Vaulto Swap | Tokenized Stock Trading Platform",
-    description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT. Secure DeFi trading with CoW Protocol integration.",
+    title: "Vaulto Swap | Trade Anywhere, Anytime",
+    description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Secure DeFi trading with CoW Protocol integration.",
     siteName: "Vaulto Swap",
     images: [
       {
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Vaulto Swap | Tokenized Stock Trading",
-    description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT.",
+    description: "Trade tokenized stocks with stablecoins on Vaulto Swap.",
     creator: "@vaultoai",
     site: "@vaultoai",
     images: ["/socialad.png"],
@@ -94,7 +94,7 @@ export default function RootLayout({
     "@type": "WebApplication",
     "name": "Vaulto Swap",
     "url": "https://app.vaulto.ai",
-    "description": "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT. Secure DeFi trading with CoW Protocol integration.",
+    "description": "Trade tokenized stocks with stablecoins on Vaulto Swap. Secure DeFi trading with CoW Protocol integration.",
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Web Browser",
     "offers": {

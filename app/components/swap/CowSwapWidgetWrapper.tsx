@@ -107,7 +107,6 @@ export default function CowSwapWidgetWrapper() {
     return (
       <div className="w-full flex items-center justify-center h-[500px]">
         <div className="text-center">
-          <p className="text-gray-400 mb-4">Loading swap interface...</p>
         </div>
       </div>
     );
