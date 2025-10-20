@@ -176,7 +176,7 @@ export default function Home() {
           
           {/* Typography Section */}
           <div className="text-center mb-1 -mt-8 sm:-mt-24">
-            <h2 className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 mb-3 sm:mb-4">
+            <h2 className="text-6xl sm:text-7xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 mb-3 sm:mb-4">
               Vaulto
             </h2>
             <p className="text-white text-lg sm:text-xl md:text-2xl font-light">
@@ -201,9 +201,63 @@ export default function Home() {
               <p className="text-gray-400 text-sm sm:text-base md:text-lg lg:text-xl max-w-3xl mx-auto mb-3 sm:mb-4">
                 Unlock institutional-grade investment opportunities through tokenized securities
               </p>
-              <p className="text-amber-500 text-base sm:text-lg md:text-xl lg:text-2xl font-semibold">
-                Coming Soon
-              </p>
+              
+              {/* Email Signup - Desktop only */}
+              <div className="hidden md:block max-w-md mx-auto relative z-10">
+                <form 
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.target as HTMLFormElement;
+                    const formData = new FormData(form);
+                    const email = formData.get('EMAIL') as string;
+                    
+                    try {
+                      await fetch('https://vaulto.us15.list-manage.com/subscribe/post?u=4e3f80ec414b40367852952ec&id=dc4af6dff9&f_id=00728ce0f0', {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        body: formData
+                      });
+                      
+                      // Show success message
+                      const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+                      const originalText = button.textContent;
+                      button.textContent = 'Subscribed!';
+                      button.className = 'px-6 py-2 bg-amber-500 text-black font-semibold rounded-lg transition-colors duration-200';
+                      
+                      // Reset after 3 seconds
+                      setTimeout(() => {
+                        button.textContent = originalText;
+                        button.className = 'px-6 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200';
+                        form.reset();
+                      }, 3000);
+                    } catch (error) {
+                      console.error('Subscription error:', error);
+                    }
+                  }}
+                  noValidate
+                  className="flex gap-2"
+                >
+                  <input
+                    type="email"
+                    name="EMAIL"
+                    placeholder="Enter your email"
+                    required
+                    autoComplete="email"
+                    className="flex-1 px-4 py-2 bg-gray-800/50 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 relative z-10"
+                    style={{ pointerEvents: 'auto' }}
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200"
+                  >
+                    Notify Me
+                  </button>
+                  {/* Hidden fields for Mailchimp */}
+                  <div style={{position: 'absolute', left: '-5000px'}} aria-hidden="true">
+                    <input type="text" name="b_4e3f80ec414b40367852952ec_dc4af6dff9" tabIndex={-1} defaultValue="" />
+                  </div>
+                </form>
+              </div>
             </div>
 
             {/* Private Markets Image */}
@@ -290,8 +344,8 @@ export default function Home() {
       {/* Mobile Footer - Optimized for mobile viewing */}
       <footer className="block md:hidden border-t border-amber-500/20 bg-black/90 backdrop-blur-sm z-50" role="contentinfo">
         <div className="container mx-auto px-6 py-4">
-          {/* Mobile-optimized layout with just social icons */}
-          <div className="flex flex-col items-center">
+          {/* Mobile-optimized layout with social icons and email signup */}
+          <div className="flex flex-col items-center space-y-4">
             {/* Social Media Icons - larger touch targets and better spacing */}
             <div className="flex items-center justify-center gap-4">
               {/* Twitter */}
@@ -345,6 +399,63 @@ export default function Home() {
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                 </svg>
               </a>
+            </div>
+            
+            {/* Email Signup - Mobile only */}
+            <div className="w-full max-w-sm relative z-10">
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const formData = new FormData(form);
+                  const email = formData.get('EMAIL') as string;
+                  
+                  try {
+                    await fetch('https://vaulto.us15.list-manage.com/subscribe/post?u=4e3f80ec414b40367852952ec&id=dc4af6dff9&f_id=00728ce0f0', {
+                      method: 'POST',
+                      mode: 'no-cors',
+                      body: formData
+                    });
+                    
+                    // Show success message
+                    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+                    const originalText = button.textContent;
+                    button.textContent = 'Subscribed!';
+                    button.className = 'w-full px-4 py-3 bg-amber-500 text-black font-semibold rounded-lg transition-colors duration-200 text-sm';
+                    
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                      button.textContent = originalText;
+                      button.className = 'w-full px-4 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200 text-sm';
+                      form.reset();
+                    }, 3000);
+                  } catch (error) {
+                    console.error('Subscription error:', error);
+                  }
+                }}
+                noValidate
+                className="flex flex-col gap-2"
+              >
+                <input
+                  type="email"
+                  name="EMAIL"
+                  placeholder="Enter your email for updates"
+                  required
+                  autoComplete="email"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm relative z-10"
+                  style={{ pointerEvents: 'auto' }}
+                />
+                <button
+                  type="submit"
+                  className="w-full px-4 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200 text-sm"
+                >
+                  Get Notified
+                </button>
+                {/* Hidden fields for Mailchimp */}
+                <div style={{position: 'absolute', left: '-5000px'}} aria-hidden="true">
+                  <input type="text" name="b_4e3f80ec414b40367852952ec_dc4af6dff9" tabIndex={-1} defaultValue="" />
+                </div>
+              </form>
             </div>
           </div>
         </div>
