@@ -4,7 +4,7 @@ import { CowSwapWidget } from '@cowprotocol/widget-react';
 import type { CowSwapWidgetParams } from '@cowprotocol/widget-lib';
 import { TradeType } from '@cowprotocol/widget-lib';
 import { useChainId, useAccount } from 'wagmi';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export default function CowSwapWidgetWrapper() {
   const chainId = useChainId();
@@ -12,7 +12,7 @@ export default function CowSwapWidgetWrapper() {
   const [isMounted, setIsMounted] = useState(false);
 
   // Map wagmi chain IDs to CoW Swap supported chains
-  const getCowChainId = (wagmiChainId: number): number => {
+  const getCowChainId = useCallback((wagmiChainId: number): number => {
     switch (wagmiChainId) {
       case 1: // Ethereum Mainnet
         return 1;
@@ -33,7 +33,7 @@ export default function CowSwapWidgetWrapper() {
       default:
         return 1; // Default to Ethereum Mainnet
     }
-  };
+  }, []);
 
   // Get the provider - CowSwap widget needs EIP-1193 provider (window.ethereum)
   const provider = isMounted && isConnected && typeof window !== 'undefined' ? window.ethereum : null;

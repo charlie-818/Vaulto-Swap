@@ -58,14 +58,6 @@ createWeb3Modal({
   themeMode: "dark",
   themeVariables: {
     "--w3m-accent": "#f59e0b", // amber-500 (gold)
-    "--w3m-accent-fill": "#f59e0b", // amber-500 (gold)
-    "--w3m-background": "#000000", // black background
-    "--w3m-background-border-radius": "8px",
-    "--w3m-border-radius-master": "8px",
-    "--w3m-color-bg-1": "#1f2937", // gray-800
-    "--w3m-color-bg-2": "#111827", // gray-900
-    "--w3m-color-fg-1": "#ffffff", // white text
-    "--w3m-color-fg-2": "#d1d5db", // gray-300
   },
 });
 

@@ -10,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://swap.vaulto.ai'),
+  metadataBase: new URL('https://app.vaulto.ai'),
   title: {
-    default: "Vaulto | Private Investing",
-    template: "%s | Vaulto"
+    default: "Vaulto Swap",
+    template: "%s | Vaulto Swap"
   },
-  description: "Swap stablecoins for tokenized stocks seamlessly on Vaulto Swap. Trade TSLA, AAPL, GOOGL, AMZN, and MSFT tokens with USDT, USDC, and DAI. Secure, compliant, and private DeFi investing.",
+  description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT. Secure DeFi trading with CoW Protocol integration for optimal pricing and MEV protection.",
   keywords: [
     "tokenized stocks",
     "DeFi trading",
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://swap.vaulto.ai",
-    title: "Vaulto Swap | Private Tokenized Stock Trading Platform",
-    description: "Swap stablecoins for tokenized stocks seamlessly. Trade TSLA, AAPL, GOOGL, AMZN, and MSFT tokens with USDT, USDC, and DAI on a secure DeFi platform.",
+    url: "https://app.vaulto.ai",
+    title: "Vaulto Swap | Tokenized Stock Trading Platform",
+    description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT. Secure DeFi trading with CoW Protocol integration.",
     siteName: "Vaulto Swap",
     images: [
       {
-        url: "/favicon.png",
+        url: "/socialad.png",
         width: 1200,
         height: 630,
         alt: "Vaulto Swap - Tokenized Stock Trading",
@@ -60,11 +60,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vaulto Swap | Private Tokenized Stock Trading",
-    description: "Swap stablecoins for tokenized stocks seamlessly. Trade TSLA, AAPL, GOOGL, AMZN, and MSFT tokens with USDT, USDC, and DAI.",
+    title: "Vaulto Swap | Tokenized Stock Trading",
+    description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT.",
     creator: "@vaultoai",
     site: "@vaultoai",
-    images: ["/favicon.png"],
+    images: ["/socialad.png"],
   },
   robots: {
     index: true,
@@ -93,8 +93,8 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "Vaulto Swap",
-    "url": "https://swap.vaulto.ai",
-    "description": "Swap stablecoins for tokenized stocks seamlessly on Vaulto Swap. Trade TSLA, AAPL, GOOGL, AMZN, and MSFT tokens with USDT, USDC, and DAI.",
+    "url": "https://app.vaulto.ai",
+    "description": "Trade tokenized stocks with stablecoins on Vaulto Swap. Seamlessly swap USDT, USDC, and DAI for tokenized stocks like TSLA, AAPL, GOOGL, AMZN, and MSFT. Secure DeFi trading with CoW Protocol integration.",
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Web Browser",
     "offers": {
@@ -106,7 +106,7 @@ export default function RootLayout({
       "@type": "Organization",
       "name": "Vaulto",
       "url": "https://vaulto.ai",
-      "logo": "https://swap.vaulto.ai/favicon.png",
+      "logo": "https://app.vaulto.ai/favicon.png",
       "sameAs": [
         "https://twitter.com/vaultoai",
         "https://instagram.com/vaultoai",

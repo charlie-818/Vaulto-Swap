@@ -180,7 +180,9 @@ export default function Home() {
             </p>
           </div>
           
-          <CowSwapWidgetWrapper />
+          <div className="w-full max-w-6xl mx-auto">
+            <CowSwapWidgetWrapper />
+          </div>
         </section>
       </div>
 
