@@ -24,7 +24,7 @@ const nextConfig = {
       { module: /@react-native-async-storage\/async-storage/ }
     ];
     
-    // Optimize bundle splitting
+    // Optimize bundle splitting - simplified to avoid module resolution issues
     if (!isServer && config.optimization && config.optimization.splitChunks && config.optimization.splitChunks !== false) {
       if (!config.optimization.splitChunks.cacheGroups) {
         config.optimization.splitChunks.cacheGroups = {};
@@ -34,12 +34,6 @@ const nextConfig = {
         wagmi: {
           test: /[\\/]node_modules[\\/](wagmi|viem)[\\/]/,
           name: 'wagmi',
-          chunks: 'all',
-          priority: 20,
-        },
-        web3modal: {
-          test: /[\\/]node_modules[\\/]@web3modal[\\/]/,
-          name: 'web3modal',
           chunks: 'all',
           priority: 20,
         },
@@ -96,6 +90,48 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      {
+        source: '/vaulto-token-list.json',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type'
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/json'
+          }
+        ]
+      },
+      {
+        source: '/vaulto-token-list-simple.json',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type'
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/json'
           }
         ]
       }

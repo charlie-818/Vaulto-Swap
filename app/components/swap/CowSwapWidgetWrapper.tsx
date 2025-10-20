@@ -57,14 +57,35 @@ export default function CowSwapWidgetWrapper() {
     }
   }, [isConnected, address, chainId, provider, isMounted, getCowChainId]);
 
+  // Debug token list configuration
+  useEffect(() => {
+    const tokenListUrl = "https://app.vaulto.ai/vaulto-token-list.json";
+    console.log('CowSwap Widget - Token List Configuration:', {
+      tokenListUrl,
+      chainId: isConnected ? getCowChainId(chainId) : 1,
+      isConnected
+    });
+    
+    // Test if token list is accessible
+    if (typeof window !== 'undefined') {
+      fetch(tokenListUrl)
+        .then(response => response.json())
+        .then(data => {
+          console.log('CowSwap Widget - Token List Loaded:', data);
+        })
+        .catch(error => {
+          console.error('CowSwap Widget - Token List Error:', error);
+        });
+    }
+  }, [chainId, isConnected, getCowChainId]);
+
   const params: CowSwapWidgetParams = {
     "appCode": "Vaulto Swap", // Name of your app (max 50 characters)
     "width": "100%", // Responsive width
     "height": "500px", // Optimized height for better mobile compatibility
     "chainId": isConnected ? getCowChainId(chainId) : 1, // Dynamic chain based on user's connected chain
-    "tokenLists": [ // All default enabled token lists
-      "https://raw.githubusercontent.com/cowprotocol/token-lists/main/src/public/CoinGecko.1.json",
-      "https://files.cow.fi/tokens/CowSwap.json"
+    "tokenLists": [ // Custom Vaulto token list
+      "https://app.vaulto.ai/vaulto-token-list.json"
     ],
     "tradeType": TradeType.SWAP, // Default to SWAP
     "sell": { // Default sell token
@@ -87,7 +108,30 @@ export default function CowSwapWidgetWrapper() {
     "hideOrdersTable": false,
     "images": {},
     "sounds": {},
-    "customTokens": [],
+    "customTokens": [
+      // Add some major tokens as custom tokens to ensure they're available
+      {
+        "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6,
+        "chainId": 1
+      },
+      {
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "symbol": "USDT", 
+        "name": "Tether USD",
+        "decimals": 6,
+        "chainId": 1
+      },
+      {
+        "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "symbol": "DAI",
+        "name": "Dai Stablecoin", 
+        "decimals": 18,
+        "chainId": 1
+      }
+    ],
     // Custom theme colors to match Vaulto's gold/amber palette
     "theme": {
       "baseTheme": "dark",

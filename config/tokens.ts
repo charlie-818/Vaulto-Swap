@@ -44,6 +44,20 @@ export const tokens: TokensByChain = {
       isStablecoin: true,
       logoURI: "/dai.png",
     },
+    {
+      address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+      symbol: "WBTC",
+      name: "Wrapped BTC",
+      decimals: 8,
+      logoURI: "/wbtc.png",
+    },
+    {
+      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      symbol: "WETH",
+      name: "Wrapped Ether",
+      decimals: 18,
+      logoURI: "/weth.png",
+    },
     // Tokenized Stocks (simulated addresses - replace with actual Backed Finance or similar)
     {
       address: "0x0000000000000000000000000000000000000001",
@@ -127,6 +141,20 @@ export const tokens: TokensByChain = {
       isStablecoin: true,
       logoURI: "/dai.png",
     },
+    {
+      address: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+      symbol: "WBTC",
+      name: "Wrapped BTC",
+      decimals: 8,
+      logoURI: "/wbtc.png",
+    },
+    {
+      address: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+      symbol: "WETH",
+      name: "Wrapped Ether",
+      decimals: 18,
+      logoURI: "/weth.png",
+    },
     // Tokenized stocks on Arbitrum
     {
       address: "0x0000000000000000000000000000000000000011",
@@ -177,6 +205,20 @@ export const tokens: TokensByChain = {
       isStablecoin: true,
       logoURI: "/dai.png",
     },
+    {
+      address: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+      symbol: "WBTC",
+      name: "Wrapped BTC",
+      decimals: 8,
+      logoURI: "/wbtc.png",
+    },
+    {
+      address: "0x4200000000000000000000000000000000000006",
+      symbol: "WETH",
+      name: "Wrapped Ether",
+      decimals: 18,
+      logoURI: "/weth.png",
+    },
   ],
   // Base
   8453: [
@@ -187,6 +229,21 @@ export const tokens: TokensByChain = {
       decimals: 6,
       isStablecoin: true,
       logoURI: "/usdc.png",
+    },
+    {
+      address: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+      symbol: "DAI",
+      name: "Dai Stablecoin",
+      decimals: 18,
+      isStablecoin: true,
+      logoURI: "/dai.png",
+    },
+    {
+      address: "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+      symbol: "cbETH",
+      name: "Coinbase Wrapped Staked ETH",
+      decimals: 18,
+      logoURI: "/cbeth.png",
     },
   ],
   // Polygon
@@ -214,6 +271,20 @@ export const tokens: TokensByChain = {
       decimals: 18,
       isStablecoin: true,
       logoURI: "/dai.png",
+    },
+    {
+      address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+      symbol: "WBTC",
+      name: "Wrapped BTC",
+      decimals: 8,
+      logoURI: "/wbtc.png",
+    },
+    {
+      address: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+      symbol: "WETH",
+      name: "Wrapped Ether",
+      decimals: 18,
+      logoURI: "/weth.png",
     },
   ],
   // Sepolia Testnet
