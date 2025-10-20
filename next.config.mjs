@@ -25,7 +25,10 @@ const nextConfig = {
     ];
     
     // Optimize bundle splitting
-    if (!isServer && config.optimization.splitChunks) {
+    if (!isServer && config.optimization && config.optimization.splitChunks && config.optimization.splitChunks !== false) {
+      if (!config.optimization.splitChunks.cacheGroups) {
+        config.optimization.splitChunks.cacheGroups = {};
+      }
       config.optimization.splitChunks.cacheGroups = {
         ...config.optimization.splitChunks.cacheGroups,
         wagmi: {
