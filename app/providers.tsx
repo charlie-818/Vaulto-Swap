@@ -26,15 +26,15 @@ const config = createConfig({
       metadata: {
         name: "Vaulto Swap",
         description: "Trade tokenized stocks with stablecoins",
-        url: "https://vaulto-swap.vercel.app",
-        icons: ["https://vaulto-swap.vercel.app/icon.png"],
+        url: typeof window !== 'undefined' ? window.location.origin : "https://swap.vaulto.ai",
+        icons: [typeof window !== 'undefined' ? `${window.location.origin}/favicon.png` : "https://swap.vaulto.ai/favicon.png"],
       },
       showQrModal: false,
     }),
     injected({ shimDisconnect: true }),
     coinbaseWallet({
       appName: "Vaulto Swap",
-      appLogoUrl: "https://vaulto-swap.vercel.app/icon.png",
+      appLogoUrl: typeof window !== 'undefined' ? `${window.location.origin}/favicon.png` : "https://swap.vaulto.ai/favicon.png",
     }),
   ],
   transports: {
@@ -57,8 +57,15 @@ createWeb3Modal({
   enableOnramp: true,
   themeMode: "dark",
   themeVariables: {
-    "--w3m-accent": "#8b5cf6",
+    "--w3m-accent": "#f59e0b", // amber-500 (gold)
+    "--w3m-accent-fill": "#f59e0b", // amber-500 (gold)
+    "--w3m-background": "#000000", // black background
+    "--w3m-background-border-radius": "8px",
     "--w3m-border-radius-master": "8px",
+    "--w3m-color-bg-1": "#1f2937", // gray-800
+    "--w3m-color-bg-2": "#111827", // gray-900
+    "--w3m-color-fg-1": "#ffffff", // white text
+    "--w3m-color-fg-2": "#d1d5db", // gray-300
   },
 });
 
