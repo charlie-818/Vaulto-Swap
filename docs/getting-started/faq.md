@@ -10,9 +10,8 @@ Vaulto Swap uses industry-standard security practices including:
 - MEV protection through CoW Swap
 - WalletConnect v2 for secure wallet connections
 - Smart contract integration with established protocols
-- Geographic restrictions for regulatory compliance
 
-⚠️ **Important**: This is a demonstration project. Smart contracts are unaudited. Always do your own research and never invest more than you can afford to lose.
+**Important**: This is a demonstration project. Smart contracts are unaudited. Always do your own research and never invest more than you can afford to lose.
 
 ### What networks does Vaulto Swap support?
 Vaulto Swap supports:
@@ -59,9 +58,6 @@ Vaulto Swap uses CoW Swap's fee structure:
 - **Network gas fees** for blockchain transactions
 - **CoW Protocol fees** (typically very low)
 - **Price impact** depends on trade size and liquidity
-
-### Why do I need to enable "regulated assets"?
-Tokenized stocks are regulated financial instruments. The compliance toggle ensures users understand they're trading securities and are legally eligible to do so in their jurisdiction.
 
 ### Can I trade on mobile?
 Yes! Vaulto Swap is fully responsive and mobile-optimized. Use WalletConnect to connect your mobile wallet and trade directly from your phone.
@@ -118,13 +114,7 @@ Yes! Your transaction history is available in:
 - Your wallet's transaction history
 - Block explorers (Etherscan, Arbiscan, etc.)
 
-## Compliance & Legal Questions
-
-### Which countries are restricted?
-Vaulto Swap implements geographic restrictions for regulatory compliance. Restricted jurisdictions typically include:
-- United States (for tokenized securities)
-- Countries subject to international sanctions
-- Jurisdictions where tokenized securities are prohibited
+## Legal Questions
 
 ### Am I eligible to trade tokenized stocks?
 Eligibility depends on your jurisdiction and local regulations. You should:
@@ -179,7 +169,6 @@ The swap button may be disabled if:
 
 ### Where can I get support?
 - **GitHub Issues**: Report bugs and technical issues
-- **Community Discord**: Join our community for help
 - **Documentation**: Check our comprehensive docs
 - **FAQ**: Review this FAQ for common questions
 
@@ -200,4 +189,4 @@ Yes! We welcome feature suggestions. Please:
 
 ---
 
-**Still have questions?** Check out our [Support](resources/support.md) page or join our community Discord for real-time help!
+**Still have questions?** Check out our documentation or open an issue on GitHub.

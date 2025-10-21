@@ -6,27 +6,27 @@ Connecting your wallet is the first step to start trading on Vaulto Swap. This g
 
 Vaulto Swap supports 300+ wallets through WalletConnect v2 integration. Here are the most popular options:
 
-### **MetaMask** (Recommended)
+### MetaMask (Recommended)
 - **Browser Extension**: Available for Chrome, Firefox, Edge, Brave
 - **Mobile App**: iOS and Android
 - **Hardware Support**: Ledger and Trezor integration
 
-### **Coinbase Wallet**
+### Coinbase Wallet
 - **Mobile App**: iOS and Android
 - **Browser Extension**: Chrome, Firefox, Edge
 - **Coinbase Integration**: Easy transfers from Coinbase exchange
 
-### **Trust Wallet**
+### Trust Wallet
 - **Mobile Only**: iOS and Android
 - **Built-in DEX**: Access to decentralized exchanges
 - **Multi-chain Support**: Native support for multiple blockchains
 
-### **Rainbow**
+### Rainbow
 - **Mobile Only**: iOS and Android
 - **Beautiful UI**: Modern, user-friendly interface
 - **NFT Support**: Built-in NFT viewing and trading
 
-### **Other Wallets**
+### Other Wallets
 Any wallet that supports WalletConnect v2, including:
 - **WalletConnect** (mobile app)
 - **Argent** (mobile, social recovery)
@@ -151,111 +151,107 @@ If you need to add a network manually:
 
 ## Troubleshooting Wallet Connection
 
-### **Common Issues and Solutions**
+### Common Issues and Solutions
 
 #### "Connection Failed"
-- **Refresh the page** and try again
-- **Clear browser cache** and cookies
-- **Disable browser extensions** temporarily
-- **Try a different browser**
+- Refresh the page and try again
+- Clear browser cache and cookies
+- Disable browser extensions temporarily
+- Try a different browser
 
 #### "Network Not Supported"
-- **Switch to a supported network** in your wallet
-- **Add the network manually** if it's not listed
-- **Check network details** are correct
+- Switch to a supported network in your wallet
+- Add the network manually if it's not listed
+- Check network details are correct
 
 #### "Wallet Not Detected"
-- **Make sure wallet extension is installed** and enabled
-- **Unlock your wallet** before connecting
-- **Try refreshing the page** after unlocking
-- **Check if wallet is set as default** in browser
+- Make sure wallet extension is installed and enabled
+- Unlock your wallet before connecting
+- Try refreshing the page after unlocking
+- Check if wallet is set as default in browser
 
 #### "Transaction Rejected"
-- **Check you have sufficient funds** for the transaction
-- **Verify gas settings** are appropriate
-- **Ensure you're on the correct network**
-- **Try increasing gas limit** if transactions fail
+- Check you have sufficient funds for the transaction
+- Verify gas settings are appropriate
+- Ensure you're on the correct network
+- Try increasing gas limit if transactions fail
 
 #### "Connection Lost"
-- **Reconnect your wallet** by clicking "Connect Wallet" again
-- **Check wallet is still unlocked**
-- **Refresh the page** if connection seems stale
-- **Restart wallet extension** if needed
+- Reconnect your wallet by clicking "Connect Wallet" again
+- Check wallet is still unlocked
+- Refresh the page if connection seems stale
+- Restart wallet extension if needed
 
-### **Mobile-Specific Issues**
+### Mobile-Specific Issues
 
 #### "QR Code Not Working"
-- **Ensure both devices are on the same network**
-- **Try refreshing the QR code**
-- **Check wallet app supports WalletConnect v2**
-- **Try manual connection** if available
+- Ensure both devices are on the same network
+- Try refreshing the QR code
+- Check wallet app supports WalletConnect v2
+- Try manual connection if available
 
 #### "Connection Timeout"
-- **Check internet connection** on both devices
-- **Try reconnecting** after a few seconds
-- **Restart wallet app** if connection fails repeatedly
+- Check internet connection on both devices
+- Try reconnecting after a few seconds
+- Restart wallet app if connection fails repeatedly
 
 #### "Wrong Network on Mobile"
-- **Switch network in mobile wallet app**
-- **Disconnect and reconnect** after switching
-- **Check network is supported** on Vaulto Swap
+- Switch network in mobile wallet app
+- Disconnect and reconnect after switching
+- Check network is supported on Vaulto Swap
 
 ## Security Best Practices
 
-### **Wallet Security**
-- **Never share your private keys** or seed phrases
-- **Use hardware wallets** for large amounts
-- **Enable biometric authentication** on mobile wallets
-- **Keep wallet software updated**
+### Wallet Security
+- Never share your private keys or seed phrases
+- Use hardware wallets for large amounts
+- Enable biometric authentication on mobile wallets
+- Keep wallet software updated
 
-### **Connection Security**
-- **Only connect to trusted sites** like swap.vaulto.ai
-- **Verify the URL** before connecting
-- **Check connection permissions** before approving
-- **Disconnect when done** trading
+### Connection Security
+- Only connect to trusted sites like swap.vaulto.ai
+- Verify the URL before connecting
+- Check connection permissions before approving
+- Disconnect when done trading
 
-### **Transaction Security**
-- **Always verify transaction details** before signing
-- **Check token addresses** match expected tokens
-- **Review gas fees** and approve only reasonable amounts
-- **Never sign transactions** you don't understand
+### Transaction Security
+- Always verify transaction details before signing
+- Check token addresses match expected tokens
+- Review gas fees and approve only reasonable amounts
+- Never sign transactions you don't understand
 
 ## Advanced Wallet Features
 
-### **Multiple Wallets**
+### Multiple Wallets
 You can connect multiple wallets, but only one can be active at a time:
-- **Switch between wallets** by disconnecting and reconnecting
-- **Each wallet maintains separate state**
-- **Transaction history is wallet-specific**
+- Switch between wallets by disconnecting and reconnecting
+- Each wallet maintains separate state
+- Transaction history is wallet-specific
 
-### **Hardware Wallet Integration**
+### Hardware Wallet Integration
 Hardware wallets provide additional security:
-- **Connect through MetaMask** or other compatible interfaces
-- **Transactions require physical confirmation**
-- **Private keys never leave the hardware device**
+- Connect through MetaMask or other compatible interfaces
+- Transactions require physical confirmation
+- Private keys never leave the hardware device
 
-### **Multisig Wallets**
+### Multisig Wallets
 For institutional or high-value trading:
-- **Gnosis Safe** support through WalletConnect
-- **Multiple signatures required** for transactions
-- **Enhanced security** for large amounts
+- Gnosis Safe support through WalletConnect
+- Multiple signatures required for transactions
+- Enhanced security for large amounts
 
 ## Next Steps
 
 Now that your wallet is connected:
 
-1. **[Make Your First Trade](making-first-trade.md)** - Learn how to execute swaps
-2. **[Understanding Tokenized Stocks](understanding-tokenized-stocks.md)** - Learn about the assets you can trade
-3. **[Supported Networks](supported-networks.md)** - Understand different blockchain networks
-4. **[Security Best Practices](security-best-practices.md)** - Keep your funds safe
+1. **[Supported Networks](supported-networks.md)** - Understand different blockchain networks
+2. **[Quick Start Guide](../getting-started/quick-start-guide.md)** - Learn how to execute swaps
 
 ## Need Help?
 
 If you're still having trouble connecting your wallet:
-- **[Troubleshooting Guide](troubleshooting/wallet-connection-issues.md)** - Detailed troubleshooting
-- **[FAQ](getting-started/faq.md)** - Common questions and answers
-- **[Support](resources/support.md)** - Get help from the community
+- **[FAQ](../getting-started/faq.md)** - Common questions and answers
 
 ---
 
-**Wallet connected successfully?** Great! Now let's [make your first trade](making-first-trade.md) and start trading tokenized stocks!
+**Wallet connected successfully?** Great! Now let's learn about supported networks and start trading tokenized stocks!
