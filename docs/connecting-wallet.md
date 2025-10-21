@@ -245,12 +245,12 @@ For institutional or high-value trading:
 Now that your wallet is connected:
 
 1. **[Supported Networks](supported-networks.md)** - Understand different blockchain networks
-2. **[Quick Start Guide](../getting-started/quick-start-guide.md)** - Learn how to execute swaps
+2. **[Quick Start Guide](quick-start-guide.md)** - Learn how to execute swaps
 
 ## Need Help?
 
 If you're still having trouble connecting your wallet:
-- **[FAQ](../getting-started/faq.md)** - Common questions and answers
+- **[FAQ](faq.md)** - Common questions and answers
 
 ---
 

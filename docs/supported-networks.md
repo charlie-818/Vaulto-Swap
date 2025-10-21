@@ -281,12 +281,12 @@ Most wallets have similar network switching:
 Now that you understand the supported networks:
 
 1. **[Connecting Your Wallet](connecting-wallet.md)** - Connect your wallet
-2. **[Quick Start Guide](../getting-started/quick-start-guide.md)** - Execute your first trade
+2. **[Quick Start Guide](quick-start-guide.md)** - Execute your first trade
 
 ## Need Help?
 
 If you're having network issues:
-- **[FAQ](../getting-started/faq.md)** - Common questions and answers
+- **[FAQ](faq.md)** - Common questions and answers
 
 ---
 

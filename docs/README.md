@@ -10,21 +10,6 @@ Vaulto Swap is a DeFi platform for trading tokenized stocks with stablecoins acr
 - **Mobile-First Design**: Responsive interface optimized for all devices
 - **Real-time Pricing**: Live price updates with optimal execution
 
-## Getting Started
-
-### Introduction
-- **[Introduction](getting-started/introduction.md)** - Platform overview and features
-
-### Quick Start
-- **[Quick Start Guide](getting-started/quick-start-guide.md)** - Setup and first trade
-- **[FAQ](getting-started/faq.md)** - Common questions and answers
-
-## User Guide
-
-### Wallet & Network Setup
-- **[Connecting Your Wallet](user-guide/connecting-wallet.md)** - Wallet setup guide
-- **[Supported Networks](user-guide/supported-networks.md)** - Blockchain networks
-
 ## Quick Links
 
 - **[Live Application](https://app.vaulto.ai)** - Try Vaulto Swap
@@ -36,4 +21,4 @@ Vaulto Swap is a demonstration project. Smart contracts have not been audited. U
 
 ---
 
-**Ready to get started?** Check out our [Quick Start Guide](getting-started/quick-start-guide.md).
+**Ready to get started?** Check out our [Quick Start Guide](quick-start-guide.md).
