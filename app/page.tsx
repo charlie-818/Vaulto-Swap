@@ -134,6 +134,16 @@ export default function Home() {
                       Holdings
                     </a>
                   </li>
+                  <li>
+                    <a 
+                      href="https://docs.vaulto.ai" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                      Docs
+                    </a>
+                  </li>
                 </ul>
               </nav>
               
@@ -158,6 +168,16 @@ export default function Home() {
                       className="text-xs text-gray-400 hover:text-white transition-colors"
                     >
                       Holdings
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://docs.vaulto.ai" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-gray-400 hover:text-white transition-colors"
+                    >
+                      Docs
                     </a>
                   </li>
                 </ul>
