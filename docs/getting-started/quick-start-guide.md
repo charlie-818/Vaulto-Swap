@@ -13,7 +13,7 @@ Before you start, make sure you have:
 
 ### Option A: MetaMask (Recommended)
 1. Install MetaMask from [metamask.io](https://metamask.io)
-2. Open Vaulto Swap at [swap.vaulto.ai](https://swap.vaulto.ai)
+2. Open Vaulto Swap at [app.vaulto.ai](https://app.vaulto.ai)
 3. Click "Connect Wallet" in the top right corner
 4. Select MetaMask from the wallet options
 5. Approve the connection in your MetaMask popup
@@ -48,7 +48,7 @@ Use testnets to practice without real funds:
 
 ### Select Tokens
 1. **From Token**: Click the dropdown and select USDC (or your preferred stablecoin)
-2. **To Token**: Click the dropdown and select bAAPL (or any tokenized stock)
+2. **To Token**: Click the dropdown and select AAPLx (or any xStock)
 3. **Enter Amount**: Type the amount you want to trade
 
 ### Review the Trade

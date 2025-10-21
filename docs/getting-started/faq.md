@@ -34,19 +34,24 @@ No account creation required! Vaulto Swap is fully decentralized. You only need 
 - USDT (Tether USD)
 - DAI (Dai Stablecoin)
 
-**Tokenized Stocks:**
-- bAAPL (Apple Inc.)
-- bTSLA (Tesla Inc.)
-- bGOOGL (Alphabet Inc.)
-- bAMZN (Amazon.com Inc.)
-- bMSFT (Microsoft Corporation)
+**xStocks (60+ Available):**
+- TSLAx (Tesla Inc.)
+- AAPLx (Apple Inc.)
+- GOOGLx (Alphabet Inc.)
+- AMZNx (Amazon.com Inc.)
+- MSFTx (Microsoft Corporation)
+- NVDAx (NVIDIA Corporation)
+- METAx (Meta Platforms Inc.)
+- NFLXx (Netflix Inc.)
+- COINx (Coinbase Global Inc.)
+- And 50+ more major stocks
 
 **Other Assets:**
 - WBTC (Wrapped Bitcoin)
 - WETH (Wrapped Ether)
 
-### How do tokenized stocks work?
-Tokenized stocks are blockchain representations of traditional securities. Each token is backed by real stock shares held by the issuer (like Backed Finance). They provide:
+### How do xStocks work?
+xStocks are blockchain representations of traditional securities. Each token provides:
 - 24/7 trading availability
 - Fractional ownership
 - Global accessibility
@@ -116,7 +121,7 @@ Yes! Your transaction history is available in:
 
 ## Legal Questions
 
-### Am I eligible to trade tokenized stocks?
+### Am I eligible to trade xStocks?
 Eligibility depends on your jurisdiction and local regulations. You should:
 - Consult with a financial advisor
 - Review local securities regulations
@@ -124,15 +129,15 @@ Eligibility depends on your jurisdiction and local regulations. You should:
 - Only trade if legally permitted in your location
 
 ### What are the risks?
-Trading tokenized stocks involves several risks:
+Trading xStocks involves several risks:
 - **Market risk**: Stock prices can go down
 - **Smart contract risk**: Unaudited contracts may have bugs
 - **Regulatory risk**: Regulations may change
 - **Technical risk**: Blockchain transactions can fail
 - **Liquidity risk**: Large trades may have significant price impact
 
-### Are tokenized stocks insured?
-Tokenized stocks may have some insurance coverage through the issuer, but this varies by provider. Always check the specific terms and conditions of the tokenized stock you're trading.
+### Are xStocks insured?
+xStocks may have some insurance coverage through the issuer, but this varies by provider. Always check the specific terms and conditions of the xStock you're trading.
 
 ## Troubleshooting
 

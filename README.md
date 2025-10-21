@@ -6,7 +6,7 @@ A modern DeFi swap interface for trading stablecoins with tokenized stocks. Buil
 
 - **Multi-Chain Support**: Ethereum, Arbitrum, Optimism, Base, and Polygon
 - **MEV Protection**: CoW Swap integration prevents front-running and sandwich attacks
-- **Tokenized Stocks**: Trade major stocks (AAPL, TSLA, GOOGL, AMZN, MSFT) with stablecoins
+- **Tokenized Stocks**: Trade major stocks (AAPLx, TSLAx, GOOGLx, AMZNx, MSFTx) with stablecoins
 - **WalletConnect v2**: Fast wallet connection with 300+ supported wallets
 - **Mobile-First**: Responsive interface optimized for all devices
 
@@ -44,6 +44,10 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+## Live Application
+
+Try Vaulto Swap at [app.vaulto.ai](https://app.vaulto.ai)
 
 ## Technology Stack
 

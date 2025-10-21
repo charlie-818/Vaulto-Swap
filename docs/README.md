@@ -5,25 +5,29 @@ Vaulto Swap is a DeFi platform for trading tokenized stocks with stablecoins acr
 ## Key Features
 
 - **Multi-Chain Support**: Trade on Ethereum, Arbitrum, Optimism, Base, and Polygon
-- **Tokenized Stocks**: Access to major company stocks (AAPL, TSLA, GOOGL, AMZN, MSFT)
+- **xStocks**: Access to major company stocks (TSLAx, AAPLx, GOOGLx, AMZNx, MSFTx, and 60+ more)
 - **MEV Protection**: CoW Swap integration prevents front-running and MEV attacks
 - **Mobile-First Design**: Responsive interface optimized for all devices
 - **Real-time Pricing**: Live price updates with optimal execution
 
-## Documentation
+## Getting Started
 
-### Getting Started
-- **[Introduction](getting-started/introduction.md)** - Platform overview
+### Introduction
+- **[Introduction](getting-started/introduction.md)** - Platform overview and features
+
+### Quick Start
 - **[Quick Start Guide](getting-started/quick-start-guide.md)** - Setup and first trade
-- **[FAQ](getting-started/faq.md)** - Common questions
+- **[FAQ](getting-started/faq.md)** - Common questions and answers
 
-### User Guide
+## User Guide
+
+### Wallet & Network Setup
 - **[Connecting Your Wallet](user-guide/connecting-wallet.md)** - Wallet setup guide
 - **[Supported Networks](user-guide/supported-networks.md)** - Blockchain networks
 
 ## Quick Links
 
-- **[Live Application](https://swap.vaulto.ai)** - Try Vaulto Swap
+- **[Live Application](https://app.vaulto.ai)** - Try Vaulto Swap
 - **[GitHub Repository](https://github.com/charlie-818/Vaulto-Swap)** - Source code
 
 ## Important Notice

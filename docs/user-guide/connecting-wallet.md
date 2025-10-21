@@ -43,7 +43,7 @@ Any wallet that supports WalletConnect v2, including:
    - Create a new wallet or import existing one
 
 2. **Connect to Vaulto Swap**
-   - Open [swap.vaulto.ai](https://swap.vaulto.ai)
+   - Open [app.vaulto.ai](https://app.vaulto.ai)
    - Click "Connect Wallet" in the top right corner
    - Select "MetaMask" from the wallet options
    - MetaMask will open and ask for permission

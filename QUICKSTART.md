@@ -39,7 +39,7 @@ npm run dev
 1. Open browser: http://localhost:3000
 2. Connect wallet: Click "Connect Wallet" button
 3. Switch network: Use Sepolia testnet for testing
-4. Select tokens: Choose USDC and a tokenized stock
+4. Select tokens: Choose USDC and an xStock (like TSLAx)
 5. Enter amount: Type any amount
 6. View quote: Price updates automatically
 
