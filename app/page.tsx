@@ -347,8 +347,39 @@ export default function Home() {
               />
             </div>
             
+            {/* Disclaimer */}
+            <div className="w-full max-w-4xl mx-auto px-4 mt-24 mb-8">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Disclaimer: All products and services provided through this platform are offered on an "as-is" and "as-available" basis. This platform does not provide investment, legal, tax, or financial advice. Any information or assets made available through this interface, including but not limited to tokenized real-world assets (RWA), stocks, bonds, and Treasury bills, are for informational and transactional purposes only and do not constitute an offer to sell or a solicitation of an offer to buy any security or financial instrument in any jurisdiction where such offer or solicitation would be unlawful.
+                <br /><br />
+                Participation in transactions may be subject to U.S. federal and state securities laws, regulations, and reporting requirements. Users are solely responsible for ensuring compliance with all applicable laws and regulations, including any restrictions on investment, transfer, or resale. Users must conduct their own due diligence and risk assessment prior to engaging in any transaction.
+                <br /><br />
+                Certain assets available through this platform may not be registered under the U.S. Securities Act of 1933 and may only be offered to accredited or otherwise eligible investors pursuant to an applicable exemption. Access to certain products and services may be restricted based on residency, investor status, or other eligibility criteria.
+                <br /><br />
+                This platform does not issue, underwrite, or guarantee any tokenized assets. All tokenized assets are created, maintained, and represented by independent third-party issuers. This platform does not make any representation or warranty regarding the accuracy, completeness, legality, or enforceability of any asset or instrument made available through the platform.
+                <br /><br />
+                This platform is non-custodial. It does not hold, manage, or control user assets or private keys. Users maintain full custody of their own wallets and are solely responsible for securing their credentials, private keys, and devices. All transactions are executed directly by the user through their own wallet.
+                <br /><br />
+                This platform does not guarantee market performance, liquidity, valuation, redemption rights, or regulatory treatment of any asset. Past performance is not indicative of future results. Trading and holding tokenized assets involves significant risk, including the possible loss of principal.
+                <br /><br />
+                By using this platform, you acknowledge and agree to all applicable terms, conditions, and disclosures, and you represent that you are in compliance with all laws and regulations that apply to you. Neither the platform nor its affiliates, officers, directors, employees, contractors, or agents shall be liable for any losses, damages, or claims arising out of or related to your use of the platform or participation in any transaction.
+              </p>
+            </div>
+            
+            {/* Footer Image - Full width */}
+            <div className="w-full mt-8 mb-8">
+              <Image
+                src="/FooterImage.png"
+                alt="Vaulto Footer"
+                width={1920}
+                height={400}
+                className="w-full h-auto object-cover"
+                priority
+              />
+            </div>
+            
             {/* Mobile Email Signup - positioned even further down below private image */}
-            <div className="block md:hidden w-full max-w-sm mx-auto relative z-10 mt-24">
+            <div className="block md:hidden w-full max-w-sm mx-auto relative z-10 mt-8">
               <form 
                 onSubmit={async (e) => {
                   e.preventDefault();

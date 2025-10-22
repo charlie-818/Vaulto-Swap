@@ -108,6 +108,10 @@ export default function CowSwapWidgetWrapper() {
     "hideOrdersTable": false,
     "images": {},
     "sounds": {},
+    "partnerFee": { // 0.5% partner fee for all transactions
+      "bps": 50, // 0.5%
+      "recipient": "0x88902e56e83331379506A4313595f5B9075Ad3e0", // Fee destination address
+    },
     "customTokens": [
       // Add some major tokens as custom tokens to ensure they're available
       {
