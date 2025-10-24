@@ -1,31 +1,33 @@
 # Supported Networks
 
-Vaulto Swap supports multiple blockchain networks, each with different characteristics, fees, and features. This guide helps you choose the best network for your trading needs.
+Vaulto operates exclusively on EVM-compatible chains, providing access to Real World Assets (RWAs) across multiple networks. Each network offers different RWA liquidity, fees, and trading characteristics.
 
-## Overview of Supported Networks
+## EVM-Only Architecture
+
+Vaulto's EVM-only approach ensures:
+- **Consistent User Experience**: Same interface across all supported chains
+- **CoW Protocol Integration**: Full compatibility with CoW Swap's batch auction mechanism
+- **Cross-Chain Liquidity**: Access to RWA liquidity aggregated across EVM chains
+- **Unified Token Standards**: ERC-20 compatibility for all RWAs
+
+## Supported Networks
 
 ### Mainnet Networks
-- **Ethereum** - The original smart contract platform
-- **Arbitrum** - Fast and cheap Ethereum L2
-- **Optimism** - Optimistic rollup for Ethereum
-- **Base** - Coinbase's L2 solution
-- **Polygon** - Ethereum scaling solution
-
-### Testnet Networks
-- **Sepolia** - Ethereum testnet for testing
-- **Arbitrum Sepolia** - Arbitrum testnet for testing
+- **Ethereum** - Highest RWA liquidity and institutional adoption
+- **Arbitrum** - Optimal balance of low fees and RWA availability
+- **Optimism** - Growing RWA ecosystem with competitive fees
+- **Base** - Coinbase's L2 with expanding RWA support
+- **Polygon** - Established DeFi ecosystem with RWA integration
 
 ## Network Comparison
 
-| Network | Type | Speed | Fees | Liquidity | Use Case |
-|---------|------|-------|------|-----------|----------|
-| **Ethereum** | L1 | Slow | High | Highest | Large trades, maximum security |
-| **Arbitrum** | L2 | Fast | Low | High | Best balance of features |
-| **Optimism** | L2 | Fast | Low | High | Low fees, good liquidity |
-| **Base** | L2 | Fast | Very Low | Medium | Coinbase integration |
-| **Polygon** | L1 | Fast | Very Low | Medium | Alternative L1 |
-| **Sepolia** | Testnet | Fast | Free | Test | Testing only |
-| **Arbitrum Sepolia** | Testnet | Fast | Free | Test | Testing only |
+| Network | Type | Speed | Fees | RWA Liquidity | Best For |
+|---------|------|-------|------|---------------|----------|
+| **Ethereum** | L1 | Moderate | High | Highest | Large RWA trades, institutional use |
+| **Arbitrum** | L2 | Fast | Low | High | Optimal RWA trading experience |
+| **Optimism** | L2 | Fast | Low | Medium | Cost-effective RWA access |
+| **Base** | L2 | Fast | Very Low | Growing | New RWA protocols, low fees |
+| **Polygon** | L1 | Fast | Very Low | Medium | DeFi integration, micro-trades |
 
 ## Detailed Network Information
 
@@ -37,21 +39,22 @@ Vaulto Swap supports multiple blockchain networks, each with different character
 - Block Time: ~12 seconds
 - Finality: ~13 minutes
 
-**Advantages**
-- Highest Security: Most decentralized and secure network
-- Maximum Liquidity: Best liquidity for all tokens
-- Native Support: All tokens and protocols available
+**RWA Advantages**
+- **Highest RWA Liquidity**: All major RWA providers deploy on Ethereum first
+- **Institutional Adoption**: Preferred by large RWA issuers and institutional traders
+- **Maximum Security**: Most decentralized and secure network for high-value RWAs
+- **Full Protocol Support**: Complete CoW Protocol integration with all features
 
-**Disadvantages**
-- High Fees: Gas costs can be $10-100+ per transaction
-- Slow Speed: Transactions can take several minutes
-- Congestion: High usage can cause delays and higher fees
+**RWA Disadvantages**
+- **High Fees**: Gas costs can be $10-100+ per transaction
+- **Slower Execution**: Transactions can take several minutes during congestion
+- **Cost Sensitivity**: May not be economical for smaller RWA trades
 
-**Best For**
-- Large trades where fees are less important
-- Maximum security requirements
-- Access to newest DeFi protocols
-- Institutional trading
+**Best For RWA Trading**
+- Large RWA trades where fees are less important
+- Institutional RWA trading and treasury management
+- Access to newest RWA protocols and tokens
+- Maximum security for high-value RWA positions
 
 ### Arbitrum One
 
@@ -61,22 +64,23 @@ Vaulto Swap supports multiple blockchain networks, each with different character
 - Block Time: ~0.25 seconds
 - Finality: ~1 second
 
-**Advantages**
-- Low Fees: Typically $0.10-1.00 per transaction
-- Fast Transactions: Near-instant confirmation
-- High Liquidity: Good liquidity for major tokens
-- Ethereum Compatibility: Full EVM compatibility
+**RWA Advantages**
+- **Low Fees**: Typically $0.10-1.00 per transaction
+- **Fast Execution**: Near-instant RWA trade confirmation
+- **High RWA Liquidity**: Good liquidity for major RWA tokens
+- **Ethereum Compatibility**: Full EVM compatibility with RWA standards
+- **CoW Protocol Support**: Complete batch auction functionality
 
-**Disadvantages**
-- Centralized Sequencer: Single sequencer (being decentralized)
-- Limited DeFi: Fewer protocols than Ethereum
-- Withdrawal Delays: 7-day withdrawal period to Ethereum
+**RWA Disadvantages**
+- **Centralized Sequencer**: Single sequencer (being decentralized)
+- **Limited RWA Protocols**: Fewer RWA providers than Ethereum
+- **Withdrawal Delays**: 7-day withdrawal period to Ethereum
 
-**Best For**
-- Regular trading with low fees
-- Best overall balance of features
-- DeFi activities with good protocol support
-- Most users (recommended)
+**Best For RWA Trading**
+- Regular RWA trading with optimal fee structure
+- Best overall balance of features for RWA access
+- DeFi activities with RWA protocol support
+- Most users (recommended for RWA trading)
 
 ### Optimism
 
@@ -86,22 +90,22 @@ Vaulto Swap supports multiple blockchain networks, each with different character
 - Block Time: ~2 seconds
 - Finality: ~2 seconds
 
-**Advantages**
-- Very Low Fees: Typically $0.05-0.50 per transaction
-- Fast Transactions: Quick confirmation times
-- Ethereum Security: Inherits Ethereum's security
-- Good DeFi Support: Growing DeFi ecosystem
+**RWA Advantages**
+- **Very Low Fees**: Typically $0.05-0.50 per transaction
+- **Fast Execution**: Quick RWA trade confirmation
+- **Ethereum Security**: Inherits Ethereum's security for RWAs
+- **Growing RWA Support**: Expanding RWA ecosystem
 
-**Disadvantages**
-- Limited Liquidity: Lower liquidity than Ethereum/Arbitrum
-- Centralized Sequencer: Single sequencer (being decentralized)
-- Withdrawal Delays: 7-day withdrawal period
+**RWA Disadvantages**
+- **Limited RWA Liquidity**: Lower liquidity than Ethereum/Arbitrum
+- **Centralized Sequencer**: Single sequencer (being decentralized)
+- **Withdrawal Delays**: 7-day withdrawal period
 
-**Best For**
-- Cost-conscious trading
-- Users prioritizing low fees
-- DeFi activities with supported protocols
-- Regular trading activities
+**Best For RWA Trading**
+- Cost-conscious RWA trading
+- Users prioritizing low fees for RWAs
+- DeFi activities with supported RWA protocols
+- Regular RWA trading activities
 
 ### Base
 
@@ -111,22 +115,22 @@ Vaulto Swap supports multiple blockchain networks, each with different character
 - Block Time: ~2 seconds
 - Finality: ~2 seconds
 
-**Advantages**
-- Very Low Fees: Typically $0.01-0.10 per transaction
-- Coinbase Integration: Easy access through Coinbase
-- Growing Ecosystem: Rapidly expanding DeFi support
-- Simple Onboarding: Easy fiat on-ramp
+**RWA Advantages**
+- **Very Low Fees**: Typically $0.01-0.10 per transaction
+- **Coinbase Integration**: Easy access through Coinbase for RWA trading
+- **Growing RWA Ecosystem**: Rapidly expanding RWA support
+- **Simple Onboarding**: Easy fiat on-ramp for RWA purchases
 
-**Disadvantages**
-- New Network: Less established than others
-- Limited Liquidity: Lower liquidity for some tokens
-- Centralized: More centralized than other networks
+**RWA Disadvantages**
+- **New Network**: Less established RWA ecosystem
+- **Limited RWA Liquidity**: Lower liquidity for some RWA tokens
+- **Centralized**: More centralized than other networks
 
-**Best For**
-- New users getting started
+**Best For RWA Trading**
+- New users getting started with RWAs
 - Users with Coinbase accounts
-- Cost-sensitive trading
-- Experimenting with new protocols
+- Cost-sensitive RWA trading
+- Experimenting with new RWA protocols
 
 ### Polygon
 
@@ -136,59 +140,59 @@ Vaulto Swap supports multiple blockchain networks, each with different character
 - Block Time: ~2 seconds
 - Finality: ~2 seconds
 
-**Advantages**
-- Very Low Fees: Typically $0.001-0.01 per transaction
-- Fast Transactions: Quick confirmation times
-- Mature Ecosystem: Well-established DeFi protocols
-- Good Liquidity: Decent liquidity for major tokens
+**RWA Advantages**
+- **Very Low Fees**: Typically $0.001-0.01 per transaction
+- **Fast Execution**: Quick RWA trade confirmation
+- **Mature DeFi Ecosystem**: Well-established DeFi protocols with RWA integration
+- **Good RWA Liquidity**: Decent liquidity for major RWA tokens
 
-**Disadvantages**
-- Separate Network: Not Ethereum L2, requires bridging
-- Different Token: Uses MATIC instead of ETH
-- Centralization Concerns: More centralized than Ethereum
+**RWA Disadvantages**
+- **Separate Network**: Not Ethereum L2, requires bridging for RWAs
+- **Different Token**: Uses MATIC instead of ETH for gas
+- **Centralization Concerns**: More centralized than Ethereum
 
-**Best For**
-- Very cost-sensitive trading
+**Best For RWA Trading**
+- Very cost-sensitive RWA trading
 - Users already active on Polygon
-- Micro-transactions
-- DeFi activities on Polygon
+- Micro RWA transactions
+- DeFi activities with RWA integration on Polygon
 
-## Choosing the Right Network
+## Choosing the Right Network for RWA Trading
 
-### For Beginners
+### For RWA Beginners
 **Recommended: Arbitrum**
-- Low fees for learning
-- Good liquidity
-- Fast transactions
-- Easy to use
+- Low fees for learning RWA trading
+- Good RWA liquidity and availability
+- Fast RWA trade execution
+- Easy to use with comprehensive RWA support
 
-### For Large Trades
+### For Large RWA Trades
 **Recommended: Ethereum**
-- Maximum liquidity
-- Best price execution
-- Highest security
-- Most protocol support
+- Maximum RWA liquidity across all providers
+- Best price execution for large RWA positions
+- Highest security for high-value RWAs
+- Most RWA protocol support and features
 
-### For Cost-Conscious Users
+### For Cost-Conscious RWA Trading
 **Recommended: Base or Optimism**
-- Very low fees
-- Good performance
-- Growing ecosystem
-- Easy onboarding
+- Very low fees for frequent RWA trading
+- Good RWA performance and execution
+- Growing RWA ecosystem
+- Easy onboarding for RWA access
 
-### For DeFi Integration
+### For RWA DeFi Integration
 **Recommended: Ethereum or Arbitrum**
-- Most DeFi protocols
-- Best liquidity
-- Established ecosystem
-- Maximum composability
+- Most RWA DeFi protocols and integrations
+- Best RWA liquidity for complex strategies
+- Established RWA ecosystem
+- Maximum RWA composability
 
-### For Testing
-**Recommended: Sepolia or Arbitrum Sepolia**
-- Free transactions
-- Safe environment
-- Learn without risk
-- Test all features
+### For RWA Portfolio Management
+**Recommended: Arbitrum**
+- Optimal balance of fees and RWA liquidity
+- Fast execution for portfolio rebalancing
+- Good RWA protocol support
+- Cost-effective for regular RWA trading
 
 ## Network Switching
 
@@ -212,45 +216,51 @@ Most wallets have similar network switching:
 - Add custom networks if needed
 - Verify RPC endpoints
 
-## Token Availability by Network
+## RWA Availability by Network
 
 ### Ethereum
-- All tokens available
-- Highest liquidity
-- Most trading pairs
+- All RWA tokens available
+- Highest RWA liquidity
+- Most RWA trading pairs
+- Full institutional RWA support
 
 ### Arbitrum
-- Major tokens available
-- Good liquidity
-- Growing token support
+- Major RWA tokens available
+- Good RWA liquidity
+- Growing RWA token support
+- Optimal RWA trading experience
 
 ### Optimism
-- Core tokens available
-- Moderate liquidity
-- Expanding support
+- Core RWA tokens available
+- Moderate RWA liquidity
+- Expanding RWA support
+- Cost-effective RWA access
 
 ### Base
-- Limited tokens
-- Growing support
-- Coinbase integration
+- Limited RWA tokens
+- Growing RWA support
+- Coinbase RWA integration
+- Emerging RWA ecosystem
 
 ### Polygon
-- Many tokens available
-- Good DeFi support
-- Established ecosystem
+- Many RWA tokens available
+- Good RWA DeFi support
+- Established RWA ecosystem
+- Alternative RWA trading venue
 
-## Gas Fee Optimization
+## RWA Trading Fee Optimization
 
-### Understanding Gas Fees
-- **Gas Price**: Cost per unit of computation
-- **Gas Limit**: Maximum gas units for transaction
-- **Total Cost**: Gas Price × Gas Limit
+### Understanding Gas Fees for RWAs
+- **Gas Price**: Cost per unit of computation for RWA trades
+- **Gas Limit**: Maximum gas units for RWA transaction
+- **Total Cost**: Gas Price × Gas Limit for RWA execution
 
-### Optimization Strategies
-- **Use L2 networks** for lower fees
-- **Trade during off-peak hours** for lower gas prices
-- **Batch transactions** when possible
-- **Monitor gas prices** before trading
+### RWA Trading Optimization Strategies
+- **Use L2 networks** for lower RWA trading fees
+- **Trade during off-peak hours** for lower gas prices on RWA trades
+- **Batch RWA transactions** when possible through CoW Protocol
+- **Monitor gas prices** before executing large RWA trades
+- **Consider RWA trade size** relative to gas costs
 
 ## Troubleshooting Network Issues
 
@@ -278,16 +288,16 @@ Most wallets have similar network switching:
 
 ## Next Steps
 
-Now that you understand the supported networks:
+Now that you understand the supported networks for RWA trading:
 
-1. **[Connecting Your Wallet](connecting-wallet.md)** - Connect your wallet
-2. **[Quick Start Guide](quick-start-guide.md)** - Execute your first trade
+1. **[Connecting Your Wallet](connecting-wallet.md)** - Connect your wallet for RWA trading
+2. **[Quick Start Guide](quick-start-guide.md)** - Execute your first RWA trade
 
 ## Need Help?
 
-If you're having network issues:
-- **[FAQ](faq.md)** - Common questions and answers
+If you're having network issues with RWA trading:
+- **[FAQ](faq.md)** - Common questions and answers about RWA trading
 
 ---
 
-**Ready to choose your network?** For most users, we recommend starting with **Arbitrum** for the best balance of low fees, fast transactions, and good liquidity. Check out our guide on [Connecting Your Wallet](connecting-wallet.md) to get started!
+**Ready to choose your network for RWA trading?** For most users, we recommend starting with **Arbitrum** for the best balance of low fees, fast transactions, and good RWA liquidity. Check out our guide on [Connecting Your Wallet](connecting-wallet.md) to get started with RWA trading!

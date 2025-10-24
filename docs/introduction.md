@@ -1,44 +1,75 @@
-# Introduction to Vaulto Swap
+# Introduction to Vaulto
 
-Vaulto Swap is a modern DeFi swap interface for trading stablecoins with tokenized stocks. Built with Next.js and powered by CoW Swap, it provides a secure and efficient way to access tokenized securities on the blockchain.
+Vaulto is a permissionless DeFi protocol that enables seamless swapping of Real World Assets (RWAs) across EVM chains. Built on CoW Swap's MEV-protected batch auction engine, Vaulto provides institutional-grade access to tokenized securities, commodities, and treasury instruments with optimal execution and settlement.
 
-## Features
+## How Vaulto Works
 
-- **Tokenized Stock Trading**: Trade major company stocks like Apple (AAPLx), Tesla (TSLAx), Google (GOOGLx), Amazon (AMZNx), and Microsoft (MSFTx) directly on the blockchain. These xStocks offer exposure to traditional equity markets through cryptocurrency.
-- **Multi-Chain Support**: Access tokens across Ethereum, Arbitrum, Optimism, Base, and Polygon networks.
-- **MEV Protection**: Powered by CoW Swap, Vaulto Swap protects users from front-running and sandwich attacks, ensuring optimal trade execution.
-- **Stablecoin Integration**: Trade with major stablecoins including USDC, USDT, and DAI.
-- **WalletConnect v2 Integration**: Fast and secure wallet connection with support for MetaMask, Coinbase Wallet, and over 300 other wallets.
-- **Real-time Price Updates**: Live price feeds updated every 10 seconds, with price impact calculation and slippage protection.
-- **Mobile-First Design**: A responsive interface optimized for all devices, featuring a sleek UI and touch-optimized controls.
+Vaulto leverages CoW Protocol's intent-based trading model to aggregate liquidity and execute trades at optimal prices:
 
-## Supported Assets
+1. **Intent Submission**: Users submit trading intents specifying desired token pairs and amounts
+2. **Batch Aggregation**: CoW Protocol aggregates intents and finds optimal execution paths
+3. **MEV Protection**: Batch auctions prevent front-running and sandwich attacks
+4. **On-Chain Settlement**: All trades settle directly on-chain with no intermediaries
 
-### xStocks (60+ Available)
-- **TSLAx** - Tesla Inc.
-- **AAPLx** - Apple Inc.
-- **GOOGLx** - Alphabet Inc. Class A
-- **AMZNx** - Amazon.com Inc.
-- **MSFTx** - Microsoft Corporation
-- **NVDAx** - NVIDIA Corporation
-- **METAx** - Meta Platforms Inc.
-- **NFLXx** - Netflix Inc.
-- **COINx** - Coinbase Global Inc.
-- And 50+ more major stocks
+This architecture ensures users receive the best available prices while maintaining full custody of their assets.
 
-### Stablecoins
-- **USDC** - USD Coin (6 decimals)
-- **USDT** - Tether USD (6 decimals)
-- **DAI** - Dai Stablecoin (18 decimals)
+## Supported Asset Categories
 
-### Other Assets
+### Tokenized US Treasuries
+- **OUSG** - Ondo Short-Term US Government Bond Fund
+- **USDY** - Ondo USD Yield Token
+- **OMMF** - Ondo Money Market Fund
+- **Other Treasury Tokens** - Various providers offering tokenized government securities
+
+### Tokenized Securities & Equities
+- **Major Stocks** - Apple, Tesla, Google, Amazon, Microsoft, and 60+ others
+- **International Equities** - Global stock market exposure
+- **Sector ETFs** - Technology, healthcare, energy, and other sector-specific funds
+- **Index Funds** - S&P 500, NASDAQ, and other major indices
+
+### Tokenized Commodities
+- **Precious Metals** - Gold, silver, platinum tokens
+- **Energy Commodities** - Oil, natural gas tokens
+- **Agricultural Products** - Wheat, corn, soybean tokens
+- **Industrial Metals** - Copper, aluminum, steel tokens
+
+### Stablecoins & Crypto Assets
+- **USDC** - USD Coin
+- **USDT** - Tether USD
+- **DAI** - Dai Stablecoin
 - **WBTC** - Wrapped Bitcoin
 - **WETH** - Wrapped Ether
 
+## Key Features
+
+- **MEV Protection**: CoW Protocol's batch auction mechanism prevents front-running and sandwich attacks
+- **Multi-Chain Support**: Trade across Ethereum, Arbitrum, Optimism, Base, and Polygon
+- **Intent-Based Trading**: Submit trading intents for optimal batch execution
+- **Non-Custodial**: Maintain full control of your assets with no KYC requirements
+- **Professional Interface**: Mobile-optimized with institutional-grade user experience
+- **Real-Time Pricing**: Live price feeds with optimal execution paths
+
+## Use Cases
+
+### Yield Optimization
+Swap between different treasury tokens to optimize yield while maintaining exposure to US government securities.
+
+### Portfolio Diversification
+Access tokenized commodities and international equities to diversify beyond traditional crypto assets.
+
+### 24/7 Trading
+Trade RWAs around the clock without traditional market hours restrictions.
+
+### Fractional Access
+Gain exposure to high-value assets through fractional tokenized ownership.
+
+### DeFi Composability
+Use RWAs as collateral in lending protocols or as liquidity in automated market makers.
+
 ## Getting Started
 
-To begin trading, follow our [Quick Start Guide](quick-start-guide.md) to connect your wallet, select a network, and make your first trade.
+To begin trading RWAs on Vaulto, follow our [Quick Start Guide](quick-start-guide.md) to connect your wallet, select a network, and execute your first trade.
 
 ---
 
-**Disclaimer**: This is a demonstration project. Smart contracts have not been audited. Always conduct your own research and understand the risks before trading.
+**Important**: Users are responsible for ensuring their trading activities comply with applicable laws and regulations in their jurisdiction.

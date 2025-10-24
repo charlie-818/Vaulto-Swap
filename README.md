@@ -1,14 +1,15 @@
-# Vaulto Swap
+# Vaulto
 
-A modern DeFi swap interface for trading stablecoins with tokenized stocks. Built with Next.js and powered by CoW Swap for MEV-protected trading.
+A permissionless DeFi protocol for swapping Real World Assets (RWAs) across EVM chains. Built with Next.js and powered by CoW Swap's MEV-protected batch auction engine for optimal RWA execution and settlement.
 
 ## Features
 
-- **Multi-Chain Support**: Ethereum, Arbitrum, Optimism, Base, and Polygon
-- **MEV Protection**: CoW Swap integration prevents front-running and sandwich attacks
-- **Tokenized Stocks**: Trade major stocks (AAPLx, TSLAx, GOOGLx, AMZNx, MSFTx) with stablecoins
-- **WalletConnect v2**: Fast wallet connection with 300+ supported wallets
-- **Mobile-First**: Responsive interface optimized for all devices
+- **RWA Trading**: Swap tokenized US Treasuries, equities, commodities, and ETFs
+- **MEV Protection**: CoW Protocol integration prevents front-running and sandwich attacks
+- **Multi-Chain Support**: Trade RWAs on Ethereum, Arbitrum, Optimism, Base, and Polygon
+- **Intent-Based Trading**: Submit trading intents for optimal batch execution
+- **Non-Custodial**: Fully decentralized with no KYC requirements
+- **Professional Interface**: Mobile-optimized with institutional-grade UX
 
 ## Quick Start
 
@@ -47,13 +48,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 ## Live Application
 
-Try Vaulto Swap at [app.vaulto.ai](https://app.vaulto.ai)
+Try Vaulto at [app.vaulto.ai](https://app.vaulto.ai)
 
 ## Technology Stack
 
 - **Next.js 14** - React framework with App Router
 - **TypeScript** - Type-safe development
-- **CoW Swap Widget** - MEV-protected trading interface
+- **CoW Swap Widget** - MEV-protected RWA trading interface
 - **Wagmi & Viem** - Ethereum interactions
 - **WalletConnect v2** - Wallet connection protocol
 - **Tailwind CSS** - Utility-first styling
@@ -82,9 +83,9 @@ Vaulto-Swap/
 3. Add `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` environment variable
 4. Deploy
 
-## Security Notice
+## Important Notice
 
-This is a demonstration project. Smart contracts have not been audited. Use at your own risk and test thoroughly on testnets before mainnet use.
+Users are responsible for ensuring their RWA trading activities comply with applicable laws and regulations in their jurisdiction. Always conduct your own research and understand the risks before trading RWAs.
 
 ## License
 

@@ -1,36 +1,38 @@
 # Connecting Your Wallet
 
-Connecting your wallet is the first step to start trading on Vaulto Swap. This guide will walk you through connecting various wallet types and troubleshooting common issues.
+Connecting your wallet is the first step to start trading Real World Assets (RWAs) on Vaulto. This guide covers wallet setup for both individual and institutional RWA trading.
 
 ## Supported Wallets
 
-Vaulto Swap supports 300+ wallets through WalletConnect v2 integration. Here are the most popular options:
+Vaulto supports 300+ wallets through WalletConnect v2 integration, optimized for RWA trading across EVM chains.
 
 ### MetaMask (Recommended)
 - **Browser Extension**: Available for Chrome, Firefox, Edge, Brave
 - **Mobile App**: iOS and Android
-- **Hardware Support**: Ledger and Trezor integration
+- **Hardware Support**: Ledger and Trezor integration for institutional security
+- **Multi-Chain**: Native support for all EVM chains
 
 ### Coinbase Wallet
 - **Mobile App**: iOS and Android
 - **Browser Extension**: Chrome, Firefox, Edge
-- **Coinbase Integration**: Easy transfers from Coinbase exchange
+- **Coinbase Integration**: Easy transfers from Coinbase exchange for RWA purchases
+- **Institutional Features**: Advanced security for large RWA positions
 
-### Trust Wallet
-- **Mobile Only**: iOS and Android
-- **Built-in DEX**: Access to decentralized exchanges
-- **Multi-chain Support**: Native support for multiple blockchains
+### Hardware Wallets (Institutional Recommended)
+- **Ledger**: Hardware security for high-value RWA trading
+- **Trezor**: Multi-signature support for institutional RWA management
+- **Integration**: Works through MetaMask or other compatible interfaces
 
-### Rainbow
-- **Mobile Only**: iOS and Android
-- **Beautiful UI**: Modern, user-friendly interface
-- **NFT Support**: Built-in NFT viewing and trading
+### Institutional Wallets
+- **Gnosis Safe**: Multi-signature wallets for institutional RWA trading
+- **Argent**: Social recovery with institutional features
+- **Fireblocks**: Enterprise-grade wallet infrastructure
 
 ### Other Wallets
 Any wallet that supports WalletConnect v2, including:
 - **WalletConnect** (mobile app)
-- **Argent** (mobile, social recovery)
-- **Gnosis Safe** (multisig wallets)
+- **Trust Wallet** (mobile)
+- **Rainbow** (mobile)
 - **And 300+ more**
 
 ## Step-by-Step Connection Guide
@@ -41,8 +43,9 @@ Any wallet that supports WalletConnect v2, including:
    - Go to [metamask.io](https://metamask.io)
    - Click "Download" and install the extension
    - Create a new wallet or import existing one
+   - **For RWA Trading**: Consider using a hardware wallet for enhanced security
 
-2. **Connect to Vaulto Swap**
+2. **Connect to Vaulto**
    - Open [app.vaulto.ai](https://app.vaulto.ai)
    - Click "Connect Wallet" in the top right corner
    - Select "MetaMask" from the wallet options
@@ -53,11 +56,12 @@ Any wallet that supports WalletConnect v2, including:
    - Your wallet address should appear in the top right
    - You should see your account balance
    - The interface should show connected state
+   - Ensure you're on a supported EVM chain for RWA trading
 
 ### Method 2: WalletConnect (Mobile Wallets)
 
 1. **Start Connection**
-   - Click "Connect Wallet" on Vaulto Swap
+   - Click "Connect Wallet" on Vaulto
    - Select "WalletConnect" from the options
    - A QR code will appear
 
@@ -68,13 +72,13 @@ Any wallet that supports WalletConnect v2, including:
 
 3. **Approve Connection**
    - Your mobile wallet will show a connection request
-   - Review the connection details
+   - Review the connection details for RWA trading
    - Tap "Connect" or "Approve" to complete
 
-4. **Start Trading**
+4. **Start RWA Trading**
    - Your mobile wallet is now connected
-   - You can trade directly from your phone
-   - Transactions will prompt on your mobile device
+   - You can trade RWAs directly from your phone
+   - RWA transactions will prompt on your mobile device
 
 ### Method 3: Coinbase Wallet
 
@@ -200,25 +204,27 @@ If you need to add a network manually:
 - Disconnect and reconnect after switching
 - Check network is supported on Vaulto Swap
 
-## Security Best Practices
+## Security Best Practices for RWA Trading
 
 ### Wallet Security
 - Never share your private keys or seed phrases
-- Use hardware wallets for large amounts
+- Use hardware wallets for large RWA positions
 - Enable biometric authentication on mobile wallets
-- Keep wallet software updated
+- Keep wallet software updated for RWA compatibility
+- Consider multi-signature wallets for institutional RWA trading
 
-### Connection Security
-- Only connect to trusted sites like swap.vaulto.ai
-- Verify the URL before connecting
+### RWA Trading Security
+- Only connect to trusted sites like app.vaulto.ai
+- Verify the URL before connecting for RWA trading
 - Check connection permissions before approving
-- Disconnect when done trading
+- Disconnect when done trading RWAs
 
-### Transaction Security
-- Always verify transaction details before signing
-- Check token addresses match expected tokens
-- Review gas fees and approve only reasonable amounts
-- Never sign transactions you don't understand
+### RWA Transaction Security
+- Always verify RWA transaction details before signing
+- Check RWA token addresses match expected tokens
+- Review gas fees and approve only reasonable amounts for RWA trades
+- Never sign RWA transactions you don't understand
+- Verify RWA token symbols and amounts before execution
 
 ## Advanced Wallet Features
 
@@ -242,16 +248,16 @@ For institutional or high-value trading:
 
 ## Next Steps
 
-Now that your wallet is connected:
+Now that your wallet is connected for RWA trading:
 
-1. **[Supported Networks](supported-networks.md)** - Understand different blockchain networks
-2. **[Quick Start Guide](quick-start-guide.md)** - Learn how to execute swaps
+1. **[Supported Networks](supported-networks.md)** - Understand different blockchain networks for RWA trading
+2. **[Quick Start Guide](quick-start-guide.md)** - Learn how to execute RWA swaps
 
 ## Need Help?
 
-If you're still having trouble connecting your wallet:
-- **[FAQ](faq.md)** - Common questions and answers
+If you're still having trouble connecting your wallet for RWA trading:
+- **[FAQ](faq.md)** - Common questions and answers about RWA trading
 
 ---
 
-**Wallet connected successfully?** Great! Now let's learn about supported networks and start trading tokenized stocks!
+**Wallet connected successfully?** Great! Now let's learn about supported networks and start trading Real World Assets!
