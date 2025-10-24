@@ -59,7 +59,7 @@ export default function CowSwapWidgetWrapper() {
 
   // Debug token list configuration
   useEffect(() => {
-    const tokenListUrl = "https://vaulto.dev/api/token-list";
+    const tokenListUrl = "https://vaulto.dev/api/token-list/";
     console.log('CowSwap Widget - Token List Configuration:', {
       tokenListUrl,
       chainId: isConnected ? getCowChainId(chainId) : 1,
@@ -85,7 +85,7 @@ export default function CowSwapWidgetWrapper() {
     "height": "500px", // Optimized height for better mobile compatibility
     "chainId": isConnected ? getCowChainId(chainId) : 1, // Dynamic chain based on user's connected chain
     "tokenLists": [ // Custom Vaulto token list
-      "https://vaulto.dev/api/token-list"
+      "https://vaulto.dev/api/token-list/"
     ],
     "tradeType": TradeType.SWAP, // Default to SWAP
     "sell": { // Default sell token
