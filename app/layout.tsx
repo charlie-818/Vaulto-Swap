@@ -6,16 +6,17 @@ import { Providers } from "./providers";
 const inter = Inter({ 
   subsets: ["latin"],
   display: 'swap',
-  preload: true,
+  preload: false,
+  fallback: ['system-ui', 'arial'],
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://app.vaulto.ai'),
   title: {
-    default: "Vaulto Swap",
-    template: "%s | Vaulto Swap"
+    default: "Vaulto | Trade Tokenized Equities 24/7",
+    template: "%s | Vaulto"
   },
-  description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Secure DeFi trading with CoW Protocol integration for optimal pricing and MEV protection.",
+  description: "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
   keywords: [
     "tokenized stocks",
     "DeFi trading",
@@ -46,22 +47,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://app.vaulto.ai",
-    title: "Vaulto Swap | Trade Anywhere, Anytime",
-    description: "Trade tokenized stocks with stablecoins on Vaulto Swap. Secure DeFi trading with CoW Protocol integration.",
-    siteName: "Vaulto Swap",
+    title: "Vaulto | Trade Tokenized Equities 24/7",
+    description: "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
+    siteName: "Vaulto",
     images: [
       {
         url: "/socialad.png",
         width: 1200,
         height: 630,
-        alt: "Vaulto Swap - Tokenized Stock Trading",
+        alt: "Vaulto Swap - Trade Tokenized Stocks with Stablecoins",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vaulto Swap | Tokenized Stock Trading",
-    description: "Trade tokenized stocks with stablecoins on Vaulto Swap.",
+    title: "Vaulto | Trade Tokenized Equities 24/7",
+    description: "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
     creator: "@vaultoai",
     site: "@vaultoai",
     images: ["/socialad.png"],
@@ -92,9 +93,9 @@ export default function RootLayout({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Vaulto Swap",
+    "name": "Vaulto",
     "url": "https://app.vaulto.ai",
-    "description": "Trade tokenized stocks with stablecoins on Vaulto Swap. Secure DeFi trading with CoW Protocol integration.",
+    "description": "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Web Browser",
     "offers": {
