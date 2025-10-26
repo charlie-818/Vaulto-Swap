@@ -13,7 +13,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://app.vaulto.ai'),
   title: {
-    default: "Vaulto | Trade Tokenized Equities 24/7",
+    default: "Vaulto",
     template: "%s | Vaulto"
   },
   description: "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://app.vaulto.ai",
-    title: "Vaulto | Trade Tokenized Equities 24/7",
+    title: "Vaulto",
     description: "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
     siteName: "Vaulto",
     images: [
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vaulto | Trade Tokenized Equities 24/7",
+    title: "Vaulto",
     description: "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
     creator: "@vaultoai",
     site: "@vaultoai",

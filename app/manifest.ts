@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Vaulto | Trade Tokenized Equities 24/7',
+    name: 'Vaulto',
     short_name: 'Vaulto',
     description: 'Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.',
     start_url: '/',
