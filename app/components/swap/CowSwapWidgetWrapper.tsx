@@ -136,16 +136,16 @@ export default function CowSwapWidgetWrapper() {
         "chainId": 1
       }
     ],
-    // Custom theme colors to match Vaulto's gold/amber palette
+    // Custom theme colors to match Vaulto's gold palette
     "theme": {
       "baseTheme": "dark",
-      "primary": "#f59e0b", // amber-500
+      "primary": "#facc15", // yellow-400 (Vaulto gold)
       "background": "#000000", // black
       "paper": "#1f2937", // gray-800
       "text": "#ffffff", // white
       "danger": "#ef4444", // red-500
-      "warning": "#f59e0b", // amber-500
-      "alert": "#f59e0b", // amber-500
+      "warning": "#facc15", // yellow-400 (Vaulto gold)
+      "alert": "#fbbf24", // yellow-400
       "info": "#3b82f6", // blue-500
       "success": "#10b981", // emerald-500
     }
