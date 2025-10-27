@@ -57,7 +57,7 @@ createWeb3Modal({
   enableOnramp: true,
   themeMode: "dark",
   themeVariables: {
-    "--w3m-accent": "#f59e0b", // amber-500 (gold)
+    "--w3m-accent": "#facc15", // yellow-400 (Vaulto gold)
   },
 });
 
