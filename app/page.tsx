@@ -30,7 +30,7 @@ function WalletButton() {
     return (
       <button
         onClick={() => open()}
-        className="px-2 py-1 md:px-4 md:py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200 text-xs md:text-sm"
+        className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 text-xs md:text-sm shadow-lg shadow-yellow-500/25"
       >
         Connect
       </button>
@@ -46,7 +46,7 @@ function WalletButton() {
       {/* Address bubble - Clickable to open wallet menu */}
       <button
         onClick={() => open()}
-        className="px-2 py-1 md:px-3 md:py-2 bg-gray-800/50 border border-amber-500/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/70 hover:border-amber-500/50 transition-all duration-200"
+        className="px-2 py-1 md:px-3 md:py-2 bg-gray-800/50 border border-yellow-400/40 rounded-lg backdrop-blur-sm hover:bg-gray-800/70 hover:border-yellow-300/60 transition-all duration-200 shadow-sm shadow-yellow-400/20"
         title="Wallet Settings"
       >
         <span className="text-xs md:text-sm font-medium text-white">
@@ -86,17 +86,17 @@ export default function Home() {
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {/* Top-left gold glow */}
         <div className="absolute -top-32 -left-32 w-[800px] h-[800px] animate-[float_20s_ease-in-out_infinite]">
-          <div className="w-full h-full bg-gradient-to-br from-amber-500/15 via-yellow-600/10 to-transparent blur-3xl"></div>
+          <div className="w-full h-full bg-gradient-to-br from-yellow-400/20 via-yellow-300/15 to-transparent blur-3xl"></div>
         </div>
         
         {/* Top-right gold glow */}
         <div className="absolute -top-32 -right-32 w-[700px] h-[700px] animate-[float_25s_ease-in-out_infinite_reverse]">
-          <div className="w-full h-full bg-gradient-to-bl from-yellow-500/12 via-amber-500/8 to-transparent blur-3xl"></div>
+          <div className="w-full h-full bg-gradient-to-bl from-yellow-300/18 via-yellow-400/12 to-transparent blur-3xl"></div>
         </div>
         
         {/* Bottom center gold shimmer */}
         <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[900px] h-[900px] animate-[pulse_30s_ease-in-out_infinite]">
-          <div className="w-full h-full bg-gradient-to-t from-amber-600/15 via-yellow-500/8 to-transparent blur-3xl"></div>
+          <div className="w-full h-full bg-gradient-to-t from-yellow-500/20 via-yellow-300/12 to-transparent blur-3xl"></div>
         </div>
       </div>
       {/* Header */}
@@ -104,12 +104,22 @@ export default function Home() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
+              {/* Mobile Logo */}
+              <Image 
+                src="/mobilelogo.png" 
+                alt="Vaulto Swap" 
+                width={32} 
+                height={32}
+                className="object-contain w-8 h-8 md:hidden"
+                priority
+              />
+              {/* Desktop Logo */}
               <Image 
                 src="/logo.png" 
                 alt="Vaulto Swap" 
                 width={120} 
                 height={40}
-                className="object-contain w-24 h-auto"
+                className="object-contain w-24 h-auto hidden md:block"
                 priority
               />
               <nav aria-label="Main navigation" className="hidden md:block">
@@ -196,7 +206,7 @@ export default function Home() {
           
           {/* Typography Section */}
           <div className="text-center mb-1 -mt-8 sm:-mt-24">
-            <h2 className="text-7xl sm:text-8xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 mb-3 sm:mb-4 tracking-tight">
+            <h2 className="text-7xl sm:text-8xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 via-yellow-500 to-yellow-400 mb-3 sm:mb-4 tracking-tight drop-shadow-lg" style={{textShadow: '0 0 20px rgba(255, 215, 0, 0.3)'}}>
               Vaulto
             </h2>
             <p className="text-white text-lg sm:text-xl md:text-2xl font-light">
@@ -220,7 +230,7 @@ export default function Home() {
                 href="https://twitter.com/vaultoai" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="p-2 text-gray-400 hover:text-amber-400 transition-colors duration-200 rounded-lg hover:bg-amber-500/10"
+                className="p-2 text-gray-400 hover:text-yellow-300 transition-colors duration-200 rounded-lg hover:bg-yellow-400/15 shadow-sm hover:shadow-yellow-400/20"
                 aria-label="Follow us on Twitter"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -233,7 +243,7 @@ export default function Home() {
                 href="https://instagram.com/vaultoai" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="p-2 text-gray-400 hover:text-amber-400 transition-colors duration-200 rounded-lg hover:bg-amber-500/10"
+                className="p-2 text-gray-400 hover:text-yellow-300 transition-colors duration-200 rounded-lg hover:bg-yellow-400/15 shadow-sm hover:shadow-yellow-400/20"
                 aria-label="Follow us on Instagram"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -246,7 +256,7 @@ export default function Home() {
                 href="https://linkedin.com/company/vaulto" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="p-2 text-gray-400 hover:text-amber-400 transition-colors duration-200 rounded-lg hover:bg-amber-500/10"
+                className="p-2 text-gray-400 hover:text-yellow-300 transition-colors duration-200 rounded-lg hover:bg-yellow-400/15 shadow-sm hover:shadow-yellow-400/20"
                 aria-label="Follow us on LinkedIn"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -259,7 +269,7 @@ export default function Home() {
                 href="https://www.youtube.com/@VaultoAI" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="p-2 text-gray-400 hover:text-amber-400 transition-colors duration-200 rounded-lg hover:bg-amber-500/10"
+                className="p-2 text-gray-400 hover:text-yellow-300 transition-colors duration-200 rounded-lg hover:bg-yellow-400/15 shadow-sm hover:shadow-yellow-400/20"
                 aria-label="Subscribe to our YouTube channel"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -270,7 +280,7 @@ export default function Home() {
 
             {/* Section Header */}
             <div className="text-center px-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 mb-2 sm:mb-3">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 via-yellow-500 to-yellow-400 mb-2 sm:mb-3 drop-shadow-lg" style={{textShadow: '0 0 15px rgba(255, 215, 0, 0.2)'}}>
                 Private Markets, Public Access
               </h2>
               <p className="text-gray-400 text-sm sm:text-base md:text-lg lg:text-xl max-w-3xl mx-auto mb-3 sm:mb-4">
@@ -302,7 +312,7 @@ export default function Home() {
                       // Reset after 3 seconds
                       setTimeout(() => {
                         button.textContent = originalText;
-                        button.className = 'px-6 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200';
+                        button.className = 'px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-colors duration-200';
                         form.reset();
                       }, 3000);
                     } catch (error) {
@@ -318,12 +328,12 @@ export default function Home() {
                     placeholder="Enter your email"
                     required
                     autoComplete="email"
-                    className="flex-1 px-4 py-2 bg-gray-800/50 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 relative z-10"
+                    className="flex-1 px-4 py-2 bg-gray-800/50 border border-yellow-400/40 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-300 focus:ring-1 focus:ring-yellow-300 relative z-10 shadow-sm shadow-yellow-400/10"
                     style={{ pointerEvents: 'auto' }}
                   />
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200"
+                    className="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25"
                   >
                     Notify Me
                   </button>
@@ -403,7 +413,7 @@ export default function Home() {
                     // Reset after 3 seconds
                     setTimeout(() => {
                       button.textContent = originalText;
-                      button.className = 'w-full px-4 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200 text-sm';
+                      button.className = 'w-full px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-colors duration-200 text-sm';
                       form.reset();
                     }, 3000);
                   } catch (error) {
@@ -419,12 +429,12 @@ export default function Home() {
                   placeholder="Enter your email for updates"
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm relative z-10"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-yellow-400/40 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-300 focus:ring-1 focus:ring-yellow-300 text-sm relative z-10"
                   style={{ pointerEvents: 'auto' }}
                 />
                 <button
                   type="submit"
-                  className="w-full px-4 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors duration-200 text-sm"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-colors duration-200 text-sm"
                 >
                   Get Notified
                 </button>
@@ -439,7 +449,7 @@ export default function Home() {
       </main>
 
       {/* Footer - Fixed at bottom for desktop, positioned after private markets for mobile */}
-      <footer className="fixed bottom-0 left-0 right-0 md:block hidden border-t border-amber-500/20 bg-black/90 backdrop-blur-sm z-50" role="contentinfo">
+      <footer className="fixed bottom-0 left-0 right-0 md:block hidden border-t border-yellow-400/30 bg-black/90 backdrop-blur-sm z-50" role="contentinfo">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <p className="text-xs text-gray-400">
@@ -453,7 +463,7 @@ export default function Home() {
                 href="https://twitter.com/vaultoai" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-amber-400 transition-colors duration-200"
+                className="text-gray-400 hover:text-yellow-300 transition-colors duration-200"
                 aria-label="Follow us on Twitter"
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
@@ -466,7 +476,7 @@ export default function Home() {
                 href="https://instagram.com/vaultoai" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-amber-400 transition-colors duration-200"
+                className="text-gray-400 hover:text-yellow-300 transition-colors duration-200"
                 aria-label="Follow us on Instagram"
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
@@ -479,7 +489,7 @@ export default function Home() {
                 href="https://linkedin.com/company/vaulto" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-amber-400 transition-colors duration-200"
+                className="text-gray-400 hover:text-yellow-300 transition-colors duration-200"
                 aria-label="Follow us on LinkedIn"
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
@@ -492,7 +502,7 @@ export default function Home() {
                 href="https://www.youtube.com/@VaultoAI" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-amber-400 transition-colors duration-200"
+                className="text-gray-400 hover:text-yellow-300 transition-colors duration-200"
                 aria-label="Subscribe to our YouTube channel"
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
