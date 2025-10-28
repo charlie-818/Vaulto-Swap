@@ -9,14 +9,7 @@ import { useWeb3Modal } from "@web3modal/wagmi/react";
 const CowSwapWidgetWrapper = dynamic(
   () => import("./components/swap/CowSwapWidgetWrapper"),
   { 
-    ssr: false,
-    loading: () => (
-      <div className="w-full max-w-4xl flex items-center justify-center h-[500px]">
-        <div className="text-center">
-          <p className="text-gray-400 mb-4">Loading swap interface...</p>
-        </div>
-      </div>
-    )
+    ssr: false
   }
 );
 
@@ -97,6 +90,11 @@ export default function Home() {
         {/* Bottom center gold shimmer */}
         <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[900px] h-[900px] animate-[pulse_30s_ease-in-out_infinite]">
           <div className="w-full h-full bg-gradient-to-t from-yellow-500/20 via-yellow-300/12 to-transparent blur-3xl"></div>
+        </div>
+        
+        {/* Bottom-right purple glow */}
+        <div className="absolute -bottom-32 -right-32 w-[800px] h-[800px] animate-[float_22s_ease-in-out_infinite]">
+          <div className="w-full h-full bg-gradient-to-tl from-purple-500/35 via-purple-400/25 to-transparent blur-3xl"></div>
         </div>
       </div>
       {/* Header */}
@@ -200,7 +198,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="relative z-10 container mx-auto px-4 flex items-center justify-center min-h-screen py-6 sm:py-8 pt-32 md:pt-6">
+      <div className="relative z-10 container mx-auto px-4 min-h-screen py-6 sm:py-8 pt-64 md:pt-48">
         <section aria-label="Token swap interface" className="w-full">
           <h1 className="sr-only">Vaulto Swap - Trade Tokenized Stocks with Stablecoins</h1>
           

@@ -152,12 +152,7 @@ export default function CowSwapWidgetWrapper() {
   };
 
   if (!isMounted) {
-    return (
-      <div className="w-full flex items-center justify-center h-[500px]">
-        <div className="text-center">
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Show swap interface even when wallet is not connected
