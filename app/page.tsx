@@ -198,12 +198,12 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="relative z-10 container mx-auto px-4 min-h-screen py-6 sm:py-8 pt-64 md:pt-48">
+      <div className="relative z-10 container mx-auto px-4 min-h-screen py-6 sm:py-8 pt-20 md:pt-48">
         <section aria-label="Token swap interface" className="w-full">
           <h1 className="sr-only">Vaulto Swap - Trade Tokenized Stocks with Stablecoins</h1>
           
           {/* Typography Section */}
-          <div className="text-center mb-1 -mt-8 sm:-mt-24">
+          <div className="text-center mb-8 mt-4 md:mt-16">
             <h2 className="text-7xl sm:text-8xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 via-yellow-500 to-yellow-400 mb-3 sm:mb-4 tracking-tight drop-shadow-lg" style={{textShadow: '0 0 20px rgba(255, 215, 0, 0.3)'}}>
               Vaulto
             </h2>
