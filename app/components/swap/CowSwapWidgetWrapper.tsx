@@ -93,7 +93,7 @@ export default function CowSwapWidgetWrapper() {
       "amount": "100"
     },
     "buy": { // Default buy token
-      "asset": "NVDAX",
+      "asset": "NVDAon",
       "amount": "1"
     },
     "enabledTradeTypes": [ // Enable all trade types
@@ -132,6 +132,13 @@ export default function CowSwapWidgetWrapper() {
         "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
         "symbol": "DAI",
         "name": "Dai Stablecoin", 
+        "decimals": 18,
+        "chainId": 1
+      },
+      {
+        "address": "0x2D1F7226Bd1F780AF6B9A49DCC0aE00E8Df4bDEE",
+        "symbol": "NVDAon",
+        "name": "NVDA Token",
         "decimals": 18,
         "chainId": 1
       }
