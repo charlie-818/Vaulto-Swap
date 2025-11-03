@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     siteName: "Vaulto",
     images: [
       {
-        url: "/socialad.png",
+        url: "/promotional.png",
         width: 1200,
         height: 630,
         alt: "Vaulto Swap - Trade Tokenized Stocks with Stablecoins",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     description: "Trade tokenized equities with stablecoins. Advanced DeFi infrastructure with MEV protection and institutional-grade security.",
     creator: "@vaultoai",
     site: "@vaultoai",
-    images: ["/socialad.png"],
+    images: ["/promotional.png"],
   },
   robots: {
     index: true,
