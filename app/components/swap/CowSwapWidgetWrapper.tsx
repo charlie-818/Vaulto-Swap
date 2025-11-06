@@ -4,12 +4,24 @@ import { CowSwapWidget } from '@cowprotocol/widget-react';
 import type { CowSwapWidgetParams } from '@cowprotocol/widget-lib';
 import { TradeType } from '@cowprotocol/widget-lib';
 import { useChainId, useAccount } from 'wagmi';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import {
+  trackSwapWidgetLoaded,
+  trackTokenSelected,
+  trackSwapAmountChanged,
+  trackSwapInitiated,
+  trackSwapCompleted,
+  trackSwapFailed,
+  trackChainChanged,
+} from '@/lib/utils/analytics';
 
 export default function CowSwapWidgetWrapper() {
   const chainId = useChainId();
   const { isConnected, address } = useAccount();
   const [isMounted, setIsMounted] = useState(false);
+  const prevChainIdRef = useRef<number | null>(null);
+  const widgetLoadedRef = useRef(false);
+  const widgetContainerRef = useRef<HTMLDivElement>(null);
 
   // Map wagmi chain IDs to CoW Swap supported chains
   const getCowChainId = useCallback((wagmiChainId: number): number => {
@@ -42,6 +54,228 @@ export default function CowSwapWidgetWrapper() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Track widget load
+  useEffect(() => {
+    if (isMounted && !widgetLoadedRef.current) {
+      const cowChainId = getCowChainId(chainId);
+      trackSwapWidgetLoaded(cowChainId);
+      widgetLoadedRef.current = true;
+    }
+  }, [isMounted, chainId, getCowChainId]);
+
+  // Track chain changes
+  useEffect(() => {
+    if (prevChainIdRef.current !== null && prevChainIdRef.current !== chainId) {
+      trackChainChanged(prevChainIdRef.current, chainId);
+    }
+    prevChainIdRef.current = chainId;
+  }, [chainId]);
+
+  // Monitor widget DOM for token selections and amount changes
+  // Note: The CoW widget manages its own state, so we track via DOM observation
+  useEffect(() => {
+    if (!isMounted || !widgetContainerRef.current) return;
+
+    let lastSellToken = '';
+    let lastBuyToken = '';
+    let lastSellAmount = '';
+    let lastBuyAmount = '';
+
+    const checkForChanges = () => {
+      if (!widgetContainerRef.current) return;
+
+      try {
+        // Try to find token selectors and amount inputs in the widget
+        // The CoW widget uses specific class names and structure
+        const widget = widgetContainerRef.current.querySelector('[class*="widget"]') || widgetContainerRef.current;
+        
+        // Look for input fields that might contain token symbols or amounts
+        const inputs = widget.querySelectorAll('input[type="text"], input[type="number"]');
+        
+        inputs.forEach((input) => {
+          const value = (input as HTMLInputElement).value;
+          const placeholder = (input as HTMLInputElement).placeholder?.toLowerCase() || '';
+          const ariaLabel = (input as HTMLInputElement).getAttribute('aria-label')?.toLowerCase() || '';
+          
+          // Try to detect if this is a token selector or amount input
+          if ((placeholder.includes('token') || placeholder.includes('select') || ariaLabel.includes('token')) && value) {
+            // This might be a token selector
+            if (value !== lastSellToken && value !== lastBuyToken) {
+              // Determine if it's sell or buy based on position or context
+              // For now, we'll track generically
+              const tokenType = value === lastSellToken ? 'sell' : 'buy';
+              trackTokenSelected(tokenType, value, undefined, getCowChainId(chainId));
+              if (tokenType === 'sell') lastSellToken = value;
+              else lastBuyToken = value;
+            }
+          } else if ((placeholder.includes('amount') || ariaLabel.includes('amount')) && value) {
+            // This might be an amount input
+            const amount = value;
+            // Try to determine if it's sell or buy amount
+            if (amount !== lastSellAmount && amount !== lastBuyAmount) {
+              // We'll track as sell amount by default (can be enhanced)
+              trackSwapAmountChanged('sell', amount, lastSellToken || 'unknown');
+              lastSellAmount = amount;
+            }
+          }
+        });
+      } catch (error) {
+        // Silently fail if we can't access widget internals
+      }
+    };
+
+    // Use MutationObserver to watch for changes in the widget
+    const observer = new MutationObserver(() => {
+      checkForChanges();
+    });
+
+    if (widgetContainerRef.current) {
+      observer.observe(widgetContainerRef.current, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['value', 'data-token', 'data-amount', 'placeholder', 'aria-label'],
+      });
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isMounted, chainId, getCowChainId]);
+
+  // Listen for transaction events from the wallet provider
+  useEffect(() => {
+    if (!isConnected || !address || typeof window === 'undefined' || !window.ethereum) return;
+
+    // Intercept transaction requests to track swaps
+    const originalRequest = window.ethereum.request;
+    let pendingSwap: { sellToken: string; buyToken: string; sellAmount: string; buyAmount: string; txHash?: string } | null = null;
+
+    // Override request to catch transaction sends
+    if (originalRequest) {
+      (window.ethereum as any).request = async (...args: any[]) => {
+        const [request] = args;
+        
+        // Check if this is a transaction request (eth_sendTransaction)
+        if (request && request.method === 'eth_sendTransaction') {
+          const cowChainId = getCowChainId(chainId);
+          
+          // Try to extract token info from transaction data if available
+          // For now, we'll track with generic values since widget state isn't accessible
+          const sellToken = 'unknown'; // Would need widget API to get actual value
+          const buyToken = 'unknown';
+          const sellAmount = request.params?.[0]?.value || '0';
+          const buyAmount = '0';
+          
+          // Track swap initiation
+          trackSwapInitiated(
+            sellToken,
+            buyToken,
+            sellAmount,
+            buyAmount,
+            cowChainId,
+            address
+          );
+
+          // Store pending swap info
+          pendingSwap = { sellToken, buyToken, sellAmount, buyAmount };
+
+          // Try to get transaction hash from response
+          try {
+            const result = await originalRequest.apply(window.ethereum, args);
+            
+            if (result && typeof result === 'string') {
+              // Transaction hash received
+              pendingSwap.txHash = result;
+              
+              // Wait for transaction confirmation
+              setTimeout(async () => {
+                try {
+                  // In production, you'd want to use a proper transaction watcher
+                  // For now, we'll assume success after a delay
+                  const cowChainId = getCowChainId(chainId);
+                  
+                  if (pendingSwap && pendingSwap.txHash) {
+                    trackSwapCompleted(
+                      pendingSwap.sellToken,
+                      pendingSwap.buyToken,
+                      pendingSwap.sellAmount,
+                      pendingSwap.buyAmount,
+                      cowChainId,
+                      pendingSwap.txHash,
+                      address
+                    );
+                    pendingSwap = null;
+                  }
+                } catch (error) {
+                  // Transaction might have failed
+                  if (pendingSwap) {
+                    trackSwapFailed(
+                      pendingSwap.sellToken,
+                      pendingSwap.buyToken,
+                      pendingSwap.sellAmount,
+                      getCowChainId(chainId),
+                      error instanceof Error ? error.message : 'Transaction failed',
+                      address
+                    );
+                    pendingSwap = null;
+                  }
+                }
+              }, 5000); // Wait 5 seconds for confirmation
+            }
+          } catch (error) {
+            // Transaction failed
+            if (pendingSwap) {
+              trackSwapFailed(
+                pendingSwap.sellToken,
+                pendingSwap.buyToken,
+                pendingSwap.sellAmount,
+                getCowChainId(chainId),
+                error instanceof Error ? error.message : 'Transaction failed',
+                address
+              );
+              pendingSwap = null;
+            }
+          }
+          
+          return originalRequest.apply(window.ethereum, args);
+        }
+        
+        return originalRequest.apply(window.ethereum, args);
+      };
+    }
+
+    // Listen for transaction events
+    const handleAccountsChanged = (accounts: string[]) => {
+      // Wallet account changed
+    };
+
+    const handleChainChanged = (chainIdHex: string) => {
+      const newChainId = parseInt(chainIdHex, 16);
+      if (prevChainIdRef.current !== null) {
+        trackChainChanged(prevChainIdRef.current, newChainId);
+      }
+    };
+
+    // Set up event listeners
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+    }
+
+    return () => {
+      // Restore original request method
+      if (originalRequest && window.ethereum) {
+        (window.ethereum as any).request = originalRequest;
+      }
+      
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
+      }
+    };
+  }, [isConnected, address, chainId, getCowChainId]);
 
   // Debug logging
   useEffect(() => {
@@ -166,7 +400,7 @@ export default function CowSwapWidgetWrapper() {
   // The CoW widget will handle wallet connection internally
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
+    <div className="w-full max-w-6xl mx-auto px-4" ref={widgetContainerRef}>
       <div className="w-full flex items-center justify-center min-h-[500px]">
         <CowSwapWidget params={params} provider={provider} />
       </div>

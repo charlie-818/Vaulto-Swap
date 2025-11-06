@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect, useChainId } from "wagmi";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { useEffect, useRef } from "react";
+import { trackWalletConnectClick, trackWalletConnected, trackWalletDisconnected } from "@/lib/utils/analytics";
 
 // Dynamically import the CoW widget to prevent SSR issues
 const CowSwapWidgetWrapper = dynamic(
@@ -16,13 +18,39 @@ const CowSwapWidgetWrapper = dynamic(
 // Custom wallet component with address and disconnect button
 function WalletButton() {
   const { open } = useWeb3Modal();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, connector } = useAccount();
   const { disconnect } = useDisconnect();
+  const chainId = useChainId();
+  const wasConnectedRef = useRef(false);
+
+  // Track wallet connection
+  useEffect(() => {
+    if (isConnected && address && !wasConnectedRef.current) {
+      trackWalletConnected(
+        address,
+        chainId,
+        connector?.name || 'unknown'
+      );
+      wasConnectedRef.current = true;
+    } else if (!isConnected && wasConnectedRef.current) {
+      trackWalletDisconnected();
+      wasConnectedRef.current = false;
+    }
+  }, [isConnected, address, chainId, connector]);
+
+  const handleConnectClick = () => {
+    trackWalletConnectClick();
+    open();
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+  };
 
   if (!isConnected) {
     return (
       <button
-        onClick={() => open()}
+        onClick={handleConnectClick}
         className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 text-xs md:text-sm shadow-lg shadow-yellow-500/25"
       >
         Connect
@@ -49,7 +77,7 @@ function WalletButton() {
       
       {/* Disconnect button - Hidden on mobile, visible on desktop */}
       <button
-        onClick={() => disconnect()}
+        onClick={handleDisconnect}
         className="hidden md:block px-3 py-3 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 group"
         title="Disconnect Wallet"
       >
