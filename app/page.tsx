@@ -162,16 +162,6 @@ export default function Home() {
                   </li>
                   <li>
                     <a 
-                      href="https://holdings.vaulto.ai" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-gray-400 hover:text-white transition-colors"
-                    >
-                      Holdings
-                    </a>
-                  </li>
-                  <li>
-                    <a 
                       href="https://docs.vaulto.ai" 
                       target="_blank" 
                       rel="noopener noreferrer"
@@ -194,16 +184,6 @@ export default function Home() {
                       className="text-xs text-gray-400 hover:text-white transition-colors"
                     >
                       Search
-                    </a>
-                  </li>
-                  <li>
-                    <a 
-                      href="https://holdings.vaulto.ai" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-xs text-gray-400 hover:text-white transition-colors"
-                    >
-                      Holdings
                     </a>
                   </li>
                   <li>
