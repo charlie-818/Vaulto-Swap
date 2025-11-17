@@ -6,7 +6,7 @@
  * following Uniswap's implementation pattern.
  */
 
-import { getAddress } from '@ethersproject/address'
+import { getAddress } from 'ethers'
 
 // Step 1: Define the token address and chain
 const TOKEN_ADDRESS = '0x0d54D4279B9E8c54cD8547c2C75A8Ee81A0BcaE8'
