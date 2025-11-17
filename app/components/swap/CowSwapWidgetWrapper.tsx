@@ -4,7 +4,7 @@ import { CowSwapWidget } from '@cowprotocol/widget-react';
 import type { CowSwapWidgetParams } from '@cowprotocol/widget-lib';
 import { TradeType } from '@cowprotocol/widget-lib';
 import { useChainId, useAccount } from 'wagmi';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   trackSwapWidgetLoaded,
   trackTokenSelected,
@@ -15,13 +15,28 @@ import {
   trackChainChanged,
 } from '@/lib/utils/analytics';
 
-export default function CowSwapWidgetWrapper() {
+interface Token {
+  address: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  logoURI?: string;
+  chainId: number;
+}
+
+interface CowSwapWidgetWrapperProps {
+  onTokenSelect?: (token: Token, type: 'sell' | 'buy') => void;
+}
+
+export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWrapperProps = {}) {
   const chainId = useChainId();
   const { isConnected, address } = useAccount();
   const [isMounted, setIsMounted] = useState(false);
   const prevChainIdRef = useRef<number | null>(null);
   const widgetLoadedRef = useRef(false);
   const widgetContainerRef = useRef<HTMLDivElement>(null);
+  const [sellToken, setSellToken] = useState<string>('USDC');
+  const [buyToken, setBuyToken] = useState<string>('NVDAon');
 
   // Map wagmi chain IDs to CoW Swap supported chains
   const getCowChainId = useCallback((wagmiChainId: number): number => {
@@ -313,23 +328,62 @@ export default function CowSwapWidgetWrapper() {
     }
   }, [chainId, isConnected, getCowChainId]);
 
-  const params: CowSwapWidgetParams = {
-    "appCode": "Vaulto Swap", // Name of your app (max 50 characters)
-    "width": "100%", // Responsive width
-    "height": "500px", // Optimized height for better mobile compatibility
-    "chainId": isConnected ? getCowChainId(chainId) : 1, // Dynamic chain based on user's connected chain
-    "tokenLists": [ // Custom Vaulto token list
-      "https://vaulto.dev/api/token-list/"
-    ],
-    "tradeType": TradeType.SWAP, // Default to SWAP
-    "sell": { // Default sell token
-      "asset": "USDC",
-      "amount": "100"
-    },
-    "buy": { // Default buy token
-      "asset": "NVDAon",
-      "amount": "1"
-    },
+  // Handle token selection from header search
+  const handleTokenSelect = useCallback((token: Token, type: 'sell' | 'buy') => {
+    console.log('Token selected:', { token: token.symbol, type, address: token.address });
+    if (type === 'sell') {
+      setSellToken(token.symbol);
+      trackTokenSelected('sell', token.symbol, token.address, getCowChainId(chainId));
+    } else {
+      setBuyToken(token.symbol);
+      trackTokenSelected('buy', token.symbol, token.address, getCowChainId(chainId));
+    }
+  }, [chainId, getCowChainId]);
+
+  // Expose handler via ref for parent access
+  const tokenSelectHandlerRef = useRef(handleTokenSelect);
+  useEffect(() => {
+    tokenSelectHandlerRef.current = handleTokenSelect;
+  }, [handleTokenSelect]);
+
+  // Expose handler to window for TokenSearch component
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__handleTokenSelect = (token: Token, type: 'sell' | 'buy') => {
+        console.log('Token selection handler called:', { symbol: token.symbol, type });
+        tokenSelectHandlerRef.current(token, type);
+      };
+      console.log('Token selection handler registered on window');
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__handleTokenSelect;
+        console.log('Token selection handler removed from window');
+      }
+    };
+  }, []);
+
+  // Create params object with current token state
+  const params: CowSwapWidgetParams = useMemo(() => {
+    const cowChainId = isConnected ? getCowChainId(chainId) : 1;
+    console.log('Creating widget params:', { sellToken, buyToken, chainId: cowChainId });
+    return {
+      "appCode": "Vaulto Swap", // Name of your app (max 50 characters)
+      "width": "100%", // Responsive width
+      "height": "500px", // Optimized height for better mobile compatibility
+      "chainId": cowChainId, // Dynamic chain based on user's connected chain
+      "tokenLists": [ // Custom Vaulto token list
+        "https://vaulto.dev/api/token-list/"
+      ],
+      "tradeType": TradeType.SWAP, // Default to SWAP
+      "sell": { // Sell token from search selection
+        "asset": sellToken,
+        "amount": "100"
+      },
+      "buy": { // Buy token from search selection
+        "asset": buyToken,
+        "amount": "1"
+      },
     "enabledTradeTypes": [ // Enable all trade types
       TradeType.SWAP,
       TradeType.LIMIT,
@@ -390,7 +444,8 @@ export default function CowSwapWidgetWrapper() {
       "info": "#3b82f6", // blue-500
       "success": "#10b981", // emerald-500
     }
-  };
+    };
+  }, [sellToken, buyToken, chainId, isConnected, getCowChainId]);
 
   if (!isMounted) {
     return null;
@@ -402,7 +457,11 @@ export default function CowSwapWidgetWrapper() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4" ref={widgetContainerRef}>
       <div className="w-full flex items-center justify-center min-h-[500px]">
-        <CowSwapWidget params={params} provider={provider} />
+        <CowSwapWidget 
+          key={`${sellToken}-${buyToken}-${getCowChainId(chainId)}`}
+          params={params} 
+          provider={provider} 
+        />
       </div>
     </div>
   );

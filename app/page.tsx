@@ -4,8 +4,9 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAccount, useDisconnect, useChainId } from "wagmi";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { trackWalletConnectClick, trackWalletConnected, trackWalletDisconnected } from "@/lib/utils/analytics";
+import TokenSearch from "./components/TokenSearch";
 
 // Dynamically import the CoW widget to prevent SSR issues
 const CowSwapWidgetWrapper = dynamic(
@@ -100,6 +101,18 @@ function WalletButton() {
 }
 
 export default function Home() {
+  const chainId = useChainId();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       <main className="relative">
@@ -126,10 +139,10 @@ export default function Home() {
         </div>
       </div>
       {/* Header */}
-      <header className="fixed md:sticky top-0 left-0 right-0 z-50 border-b border-gray-800 bg-black/80 backdrop-blur-sm" role="banner">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
+      <header className={`sticky top-0 left-0 right-0 z-50 backdrop-blur-sm transition-all duration-300 border-b pt-2 ${isScrolled ? 'bg-black/80 border-gray-800 pb-2' : 'bg-transparent border-transparent'}`} role="banner">
+        <div className="container mx-auto px-4 py-3 relative">
+          <div className="flex items-center justify-between gap-2 md:gap-4">
+            <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
               {/* Mobile Logo */}
               <Image 
                 src="/mobilelogo.png" 
@@ -172,36 +185,19 @@ export default function Home() {
                   </li>
                 </ul>
               </nav>
-              
-              {/* Mobile Navigation */}
-              <nav aria-label="Mobile navigation" className="md:hidden">
-                <ul className="flex items-center gap-3">
-                  <li>
-                    <a 
-                      href="https://vaulto.ai" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-xs text-gray-400 hover:text-white transition-colors"
-                    >
-                      Search
-                    </a>
-                  </li>
-                  <li>
-                    <a 
-                      href="https://docs.vaulto.ai" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-xs text-gray-400 hover:text-white transition-colors"
-                    >
-                      Docs
-                    </a>
-                  </li>
-                </ul>
-              </nav>
             </div>
             
             {/* Connect Wallet Button */}
-            <WalletButton />
+            <div className="flex-shrink-0">
+              <WalletButton />
+            </div>
+          </div>
+          
+          {/* Token Search Bar - Centered in header */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-full max-w-md px-4 pointer-events-none">
+            <div className="flex justify-center pointer-events-auto">
+              <TokenSearch chainId={chainId} />
+            </div>
           </div>
         </div>
       </header>
@@ -216,7 +212,7 @@ export default function Home() {
               Vaulto
             </h2>
             <p className="text-white text-lg sm:text-xl md:text-2xl font-light">
-              Trade anywhere anytime
+              Trade Stocks 24/7
             </p>
           </div>
           
@@ -455,7 +451,7 @@ export default function Home() {
       </main>
 
       {/* Footer - Fixed at bottom for desktop, positioned after private markets for mobile */}
-      <footer className="fixed bottom-0 left-0 right-0 md:block hidden border-t border-yellow-400/30 bg-black/90 backdrop-blur-sm z-50" role="contentinfo">
+      <footer className={`fixed bottom-0 left-0 right-0 md:block hidden z-50 transition-all duration-300 border-t ${isScrolled ? 'bg-black/90 border-gray-800' : 'bg-transparent border-transparent'}`} role="contentinfo">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <p className="text-xs text-gray-400">
@@ -521,7 +517,7 @@ export default function Home() {
       </footer>
 
       {/* Mobile Footer - Simplified for mobile viewing */}
-      <footer className="block md:hidden bg-black/90 backdrop-blur-sm z-50" role="contentinfo">
+      <footer className={`block md:hidden z-50 transition-all duration-300 border-t ${isScrolled ? 'bg-black/90 border-gray-800' : 'bg-transparent border-transparent'}`} role="contentinfo">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-center">
             <p className="text-xs text-gray-400">

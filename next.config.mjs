@@ -4,6 +4,39 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   swcMinify: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'coin-images.coingecko.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.coingecko.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+        pathname: '/Uniswap/assets/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'token-icons.s3.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ipfs.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gateway.pinata.cloud',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cloudflare-ipfs.com',
+      },
+    ],
+  },
   experimental: {
     optimizePackageImports: ['@cowprotocol/widget-react', 'wagmi', '@web3modal/wagmi'],
   },
