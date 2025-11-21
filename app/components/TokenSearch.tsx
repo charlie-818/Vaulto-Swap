@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { getTokenLogoUrl } from '@/query-token-logo';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 interface Token {
   address: string;
@@ -145,6 +146,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
   const fetchingLogosRef = useRef<Set<string>>(new Set());
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   
   // Load cached logos from localStorage on mount
   useEffect(() => {
@@ -414,6 +416,29 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     },
   ], []);
 
+  // Helper function to normalize logoURI (handle relative URLs)
+  const normalizeLogoURI = useCallback((logoURI: string | undefined): string | undefined => {
+    if (!logoURI) return undefined;
+    
+    // If it's already an absolute URL (starts with http:// or https://), return as-is
+    if (logoURI.startsWith('http://') || logoURI.startsWith('https://')) {
+      return logoURI;
+    }
+    
+    // If it's a relative URL starting with /, resolve it relative to the current origin
+    if (logoURI.startsWith('/')) {
+      return typeof window !== 'undefined' ? `${window.location.origin}${logoURI}` : logoURI;
+    }
+    
+    // For other relative URLs, assume they're relative to the API base URL
+    // This handles cases where logoURI might be relative to the API endpoint
+    if (typeof window !== 'undefined') {
+      return logoURI;
+    }
+    
+    return logoURI;
+  }, []);
+
   // Helper function to process and set tokens
   const processAndSetTokens = useCallback((apiTokens: Token[]) => {
     const cowChainId = getCowChainId(chainId);
@@ -432,12 +457,20 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     const uniqueTokens = allTokens.reduce((acc, token) => {
       const key = `${token.chainId}-${token.address.toLowerCase()}`;
       if (!acc.has(key)) {
-        acc.set(key, token);
+        // Normalize logoURI if present
+        const normalizedToken = {
+          ...token,
+          logoURI: normalizeLogoURI(token.logoURI)
+        };
+        acc.set(key, normalizedToken);
       }
       return acc;
     }, new Map<string, Token>());
     
     const finalTokens = Array.from(uniqueTokens.values());
+    
+    // Log tokens with logoURI for debugging
+    const tokensWithLogos = finalTokens.filter(t => t.logoURI);
     console.log('TokenSearch: Processed tokens', {
       chainId,
       cowChainId,
@@ -446,13 +479,23 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
       vaultoChainTokensCount: vaultoChainTokens.length,
       standardChainTokensCount: standardChainTokens.length,
       finalTokensCount: finalTokens.length,
-      sampleTokens: finalTokens.slice(0, 5).map(t => ({ symbol: t.symbol, name: t.name }))
+      tokensWithLogoURICount: tokensWithLogos.length,
+      sampleTokens: finalTokens.slice(0, 5).map(t => ({ 
+        symbol: t.symbol, 
+        name: t.name, 
+        hasLogoURI: !!t.logoURI,
+        logoURI: t.logoURI 
+      })),
+      sampleTokensWithLogos: tokensWithLogos.slice(0, 3).map(t => ({
+        symbol: t.symbol,
+        logoURI: t.logoURI
+      }))
     });
     setTokens(finalTokens);
     
     // Fetch logos for tokens that don't have logoURI
     fetchTokenLogos(finalTokens);
-  }, [chainId, fetchTokenLogos, standardTokens, vaultoTokens]);
+  }, [chainId, fetchTokenLogos, standardTokens, vaultoTokens, normalizeLogoURI]);
 
   // Fetch tokens from API
   useEffect(() => {
@@ -465,10 +508,21 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
           if (response.ok) {
             const data = await response.json();
             const apiTokens: Token[] = data.tokens || [];
+            const tokensWithLogos = apiTokens.filter(t => t.logoURI);
             console.log('TokenSearch: Loaded tokens from API', {
               chainId,
               apiTokensCount: apiTokens.length,
-              sampleTokens: apiTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
+              tokensWithLogoURICount: tokensWithLogos.length,
+              sampleTokens: apiTokens.slice(0, 3).map(t => ({ 
+                symbol: t.symbol, 
+                chainId: t.chainId,
+                hasLogoURI: !!t.logoURI,
+                logoURI: t.logoURI 
+              })),
+              sampleTokensWithLogos: tokensWithLogos.slice(0, 3).map(t => ({
+                symbol: t.symbol,
+                logoURI: t.logoURI
+              }))
             });
             processAndSetTokens(apiTokens);
             return;
@@ -537,8 +591,9 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
       ))
       .filter((token): token is Token => token !== undefined);
     
-    return defaultTokens;
-  }, [tokens, chainId]);
+    // Limit to 4 on mobile
+    return isMobile ? defaultTokens.slice(0, 4) : defaultTokens;
+  }, [tokens, chainId, isMobile]);
 
   // Filter tokens based on search query
   useEffect(() => {
@@ -568,12 +623,13 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     console.log('TokenSearch: Filtered results', {
       query,
       filteredCount: filtered.length,
-      results: filtered.slice(0, 10).map(t => ({ symbol: t.symbol, name: t.name }))
+      results: filtered.slice(0, isMobile ? 4 : 10).map(t => ({ symbol: t.symbol, name: t.name }))
     });
 
-    // Limit to 10 results for performance
-    setFilteredTokens(filtered.slice(0, 10));
-  }, [searchQuery, tokens, isOpen, getDefaultTokens]);
+    // Limit to 4 results on mobile, 10 on desktop for performance
+    const maxResults = isMobile ? 4 : 10;
+    setFilteredTokens(filtered.slice(0, maxResults));
+  }, [searchQuery, tokens, isOpen, getDefaultTokens, isMobile]);
 
   // Keyboard shortcut: "/" to open search
   useEffect(() => {
@@ -729,12 +785,27 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                 {filteredTokens.map((token) => {
                   const logoKey = `${token.chainId}-${token.address.toLowerCase()}`;
                   const fetchedLogoUrl = logoUrls.get(logoKey);
+                  
+                  // Prioritize logoURI from API/token data first, then fetched logo, then fallback
                   const primaryLogoUrl = token.logoURI || fetchedLogoUrl || null;
                   const primaryFailed = primaryLogoUrl && failedImages.has(`${logoKey}-primary`);
                   const uniswapFallbackUrl = (!primaryLogoUrl || primaryFailed) ? getUniswapAssetsUrl(token.chainId, token.address) : null;
                   const uniswapFailed = uniswapFallbackUrl && failedImages.has(`${logoKey}-uniswap`);
                   const displayLogoUrl = (!primaryFailed && primaryLogoUrl) || (!uniswapFailed && uniswapFallbackUrl) || null;
                   const showFallback = !displayLogoUrl;
+                  
+                  // Debug logging for logo display (only log first few to avoid spam)
+                  if (filteredTokens.indexOf(token) < 3) {
+                    console.debug('TokenSearch: Logo display', {
+                      symbol: token.symbol,
+                      hasLogoURI: !!token.logoURI,
+                      logoURI: token.logoURI,
+                      fetchedLogoUrl,
+                      primaryLogoUrl,
+                      displayLogoUrl,
+                      showFallback
+                    });
+                  }
                   
                   // Generate fallback color from token symbol or address
                   const fallbackColor = generateColorFromSeed(token.symbol || token.address);

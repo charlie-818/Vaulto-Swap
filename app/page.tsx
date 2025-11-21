@@ -474,7 +474,7 @@ export default function Home() {
       </div>
 
         {/* Private Markets Section */}
-        <section className="relative z-10 w-full bg-black pt-8 sm:pt-12 md:pt-16 pb-0 overflow-hidden">
+        <section className="relative z-10 w-full bg-black pt-8 sm:pt-12 md:pt-16 pb-20 md:pb-0 overflow-hidden">
           <div className="container mx-auto px-4">
             {/* Social Media Icons - Mobile only, above Private Markets text */}
             <div className="flex items-center justify-center gap-4 mb-6 md:hidden">
@@ -767,8 +767,8 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Mobile Footer - Simplified for mobile viewing */}
-      <footer className={`block md:hidden z-50 transition-all duration-300 border-t ${isScrolled ? 'bg-black/90 border-gray-800' : 'bg-transparent border-transparent'}`} role="contentinfo">
+      {/* Mobile Footer - Sticky at bottom for mobile viewing */}
+      <footer className={`fixed bottom-0 left-0 right-0 block md:hidden z-50 transition-all duration-300 border-t ${isScrolled ? 'bg-black/90 border-gray-800' : 'bg-transparent border-transparent'}`} role="contentinfo">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-center">
             <p className="text-xs text-gray-400">

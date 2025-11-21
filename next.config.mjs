@@ -35,6 +35,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'cloudflare-ipfs.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'vaulto.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.vaulto.dev',
+      },
     ],
   },
   experimental: {

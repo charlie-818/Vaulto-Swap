@@ -146,7 +146,11 @@ function MobileProviderWrapper({ children }: { children: React.ReactNode }) {
   // After mount, conditionally wrap with RainbowKitProvider on mobile
   if (isMobile) {
     return (
-      <RainbowKitProvider theme={rainbowKitTheme}>
+      <RainbowKitProvider 
+        theme={rainbowKitTheme}
+        initialChain={mainnet}
+        modalSize="compact"
+      >
         {children}
       </RainbowKitProvider>
     );
