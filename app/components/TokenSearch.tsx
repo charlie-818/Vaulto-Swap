@@ -99,6 +99,38 @@ const getUniswapAssetsUrl = (chainId: number, address: string): string => {
   return `https://raw.githubusercontent.com/Uniswap/assets/master/blockchains/${networkName}/assets/${checksummedAddress}/logo.png`;
 };
 
+// LocalStorage key for logo cache
+const LOGO_CACHE_KEY = 'vaulto_token_logo_cache';
+
+// Helper functions for localStorage caching
+const loadLogoCache = (): Map<string, string | null> => {
+  if (typeof window === 'undefined') return new Map();
+  
+  try {
+    const cached = localStorage.getItem(LOGO_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return new Map(Object.entries(parsed));
+    }
+  } catch (error) {
+    console.debug('Failed to load logo cache from localStorage:', error);
+  }
+  return new Map();
+};
+
+const saveLogoToCache = (key: string, logoUrl: string | null): void => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const cached = loadLogoCache();
+    cached.set(key, logoUrl);
+    const serialized = Object.fromEntries(cached);
+    localStorage.setItem(LOGO_CACHE_KEY, JSON.stringify(serialized));
+  } catch (error) {
+    console.debug('Failed to save logo to localStorage cache:', error);
+  }
+};
+
 export default function TokenSearch({ chainId }: TokenSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -113,6 +145,15 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
   const fetchingLogosRef = useRef<Set<string>>(new Set());
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Load cached logos from localStorage on mount
+  useEffect(() => {
+    const cached = loadLogoCache();
+    if (cached.size > 0) {
+      setLogoUrls(cached);
+      logoUrlsRef.current = cached;
+    }
+  }, []);
   
   // Keep refs in sync with state
   useEffect(() => {
@@ -273,6 +314,19 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
         batch.map(async (token) => {
           const key = `${token.chainId}-${token.address.toLowerCase()}`;
           
+          // Check localStorage cache first
+          const cachedLogo = loadLogoCache().get(key);
+          if (cachedLogo !== undefined) {
+            // Found in cache, use it
+            setLogoUrls(prev => {
+              const newMap = new Map(prev);
+              newMap.set(key, cachedLogo);
+              logoUrlsRef.current = newMap;
+              return newMap;
+            });
+            return; // Skip API call
+          }
+          
           // Check if already fetched or currently fetching using refs
           if (logoUrlsRef.current.has(key) || fetchingLogosRef.current.has(key)) {
             return; // Skip if already fetched or currently fetching
@@ -290,6 +344,9 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
             const graphQLChain = getGraphQLChainName(token.chainId);
             const result = await getTokenLogoUrl(token.address, graphQLChain);
             
+            // Save to localStorage cache
+            saveLogoToCache(key, result.logoUrl);
+            
             // Update logo URLs map
             setLogoUrls(prev => {
               const newMap = new Map(prev);
@@ -300,6 +357,10 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
           } catch (error) {
             // Silently fail - token will just not have a logo
             console.debug(`Failed to fetch logo for ${token.symbol}:`, error);
+            
+            // Cache null value to avoid retrying failed lookups
+            saveLogoToCache(key, null);
+            
             setLogoUrls(prev => {
               const newMap = new Map(prev);
               newMap.set(key, null);
@@ -353,66 +414,108 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     },
   ], []);
 
+  // Helper function to process and set tokens
+  const processAndSetTokens = useCallback((apiTokens: Token[]) => {
+    const cowChainId = getCowChainId(chainId);
+    const chainTokens = apiTokens.filter(token => token.chainId === cowChainId);
+    
+    // Filter Vaulto tokens by current chain ID
+    const vaultoChainTokens = vaultoTokens.filter(token => token.chainId === cowChainId);
+    
+    // Filter standard tokens by current chain ID (or use mainnet as fallback)
+    const standardChainTokens = standardTokens.filter(token => 
+      token.chainId === cowChainId || (cowChainId !== 1 && token.chainId === 1)
+    );
+    
+    // Combine all tokens and remove duplicates
+    const allTokens = [...standardChainTokens, ...vaultoChainTokens, ...chainTokens];
+    const uniqueTokens = allTokens.reduce((acc, token) => {
+      const key = `${token.chainId}-${token.address.toLowerCase()}`;
+      if (!acc.has(key)) {
+        acc.set(key, token);
+      }
+      return acc;
+    }, new Map<string, Token>());
+    
+    const finalTokens = Array.from(uniqueTokens.values());
+    console.log('TokenSearch: Processed tokens', {
+      chainId,
+      cowChainId,
+      apiTokensCount: apiTokens.length,
+      chainTokensCount: chainTokens.length,
+      vaultoChainTokensCount: vaultoChainTokens.length,
+      standardChainTokensCount: standardChainTokens.length,
+      finalTokensCount: finalTokens.length,
+      sampleTokens: finalTokens.slice(0, 5).map(t => ({ symbol: t.symbol, name: t.name }))
+    });
+    setTokens(finalTokens);
+    
+    // Fetch logos for tokens that don't have logoURI
+    fetchTokenLogos(finalTokens);
+  }, [chainId, fetchTokenLogos, standardTokens, vaultoTokens]);
+
   // Fetch tokens from API
   useEffect(() => {
     const fetchTokens = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('https://vaulto.dev/api/token-list/');
-        if (response.ok) {
-          const data = await response.json();
-          const apiTokens: Token[] = data.tokens || [];
-          
-          // Filter tokens by current chain ID
-          const cowChainId = getCowChainId(chainId);
-          const chainTokens = apiTokens.filter(token => token.chainId === cowChainId);
-          
-          // Filter Vaulto tokens by current chain ID
-          const vaultoChainTokens = vaultoTokens.filter(token => token.chainId === cowChainId);
-          
-          // Filter standard tokens by current chain ID (or use mainnet as fallback)
-          const standardChainTokens = standardTokens.filter(token => 
-            token.chainId === cowChainId || (cowChainId !== 1 && token.chainId === 1)
-          );
-          
-          // Combine all tokens and remove duplicates
-          const allTokens = [...standardChainTokens, ...vaultoChainTokens, ...chainTokens];
-          const uniqueTokens = allTokens.reduce((acc, token) => {
-            const key = `${token.chainId}-${token.address.toLowerCase()}`;
-            if (!acc.has(key)) {
-              acc.set(key, token);
-            }
-            return acc;
-          }, new Map<string, Token>());
-          
-          const finalTokens = Array.from(uniqueTokens.values());
-          setTokens(finalTokens);
-          
-          // Fetch logos for tokens that don't have logoURI
-          fetchTokenLogos(finalTokens);
-        } else {
-          // Fallback to Vaulto and standard tokens only
-          const cowChainId = getCowChainId(chainId);
-          const fallbackTokens = [
-            ...standardTokens.filter(t => t.chainId === cowChainId || (cowChainId !== 1 && t.chainId === 1)),
-            ...vaultoTokens.filter(t => t.chainId === cowChainId)
-          ];
-          setTokens(fallbackTokens);
-          
-          // Fetch logos for tokens that don't have logoURI
-          fetchTokenLogos(fallbackTokens);
+        // Try API first
+        try {
+          const response = await fetch('https://vaulto.dev/api/token-list/');
+          if (response.ok) {
+            const data = await response.json();
+            const apiTokens: Token[] = data.tokens || [];
+            console.log('TokenSearch: Loaded tokens from API', {
+              chainId,
+              apiTokensCount: apiTokens.length,
+              sampleTokens: apiTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
+            });
+            processAndSetTokens(apiTokens);
+            return;
+          } else {
+            console.warn('TokenSearch: API response not OK', { status: response.status, statusText: response.statusText });
+          }
+        } catch (error) {
+          console.warn('TokenSearch: Error fetching token list from API:', error);
         }
-      } catch (error) {
-        console.error('Error fetching token list:', error);
-        // Fallback to Vaulto and standard tokens only
+        
+        // Fallback to static token-list.json file
+        try {
+          const response = await fetch('/token-list.json');
+          if (response.ok) {
+            const data = await response.json();
+            // Handle both API format { tokens: [...] } and file format { name, version, tokens: [...] }
+            const apiTokens: Token[] = data.tokens || [];
+            console.log('TokenSearch: Loaded tokens from static file', {
+              chainId,
+              apiTokensCount: apiTokens.length,
+              sampleTokens: apiTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
+            });
+            if (apiTokens.length > 0) {
+              processAndSetTokens(apiTokens);
+              return;
+            }
+          } else {
+            console.warn('TokenSearch: Static file response not OK', { status: response.status, statusText: response.statusText });
+          }
+        } catch (error) {
+          console.warn('TokenSearch: Error fetching token list from static file:', error);
+        }
+        
+        // Final fallback to hardcoded tokens only
+        console.warn('TokenSearch: Using hardcoded token fallback - API and static file unavailable');
         const cowChainId = getCowChainId(chainId);
         const fallbackTokens = [
           ...standardTokens.filter(t => t.chainId === cowChainId || (cowChainId !== 1 && t.chainId === 1)),
           ...vaultoTokens.filter(t => t.chainId === cowChainId)
         ];
+        console.log('TokenSearch: Using fallback tokens', {
+          chainId,
+          cowChainId,
+          fallbackTokensCount: fallbackTokens.length,
+          sampleTokens: fallbackTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
+        });
         setTokens(fallbackTokens);
-        
-        // Fetch logos for tokens that don't have logoURI
         fetchTokenLogos(fallbackTokens);
       } finally {
         setIsLoading(false);
@@ -420,7 +523,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     };
 
     fetchTokens();
-  }, [chainId, fetchTokenLogos, standardTokens, vaultoTokens]);
+  }, [chainId, processAndSetTokens]);
 
   // Default tokens to show when search is first opened
   const getDefaultTokens = useCallback((): Token[] => {
@@ -450,10 +553,22 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     }
 
     const query = searchQuery.toLowerCase().trim();
+    console.log('TokenSearch: Filtering tokens', {
+      query,
+      totalTokens: tokens.length,
+      sampleTokens: tokens.slice(0, 5).map(t => ({ symbol: t.symbol, name: t.name }))
+    });
+    
     const filtered = tokens.filter(token => {
       const symbolMatch = token.symbol.toLowerCase().includes(query);
       const nameMatch = token.name.toLowerCase().includes(query);
       return symbolMatch || nameMatch;
+    });
+
+    console.log('TokenSearch: Filtered results', {
+      query,
+      filteredCount: filtered.length,
+      results: filtered.slice(0, 10).map(t => ({ symbol: t.symbol, name: t.name }))
     });
 
     // Limit to 10 results for performance
@@ -564,7 +679,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
 
   return (
     <>
-      <div ref={searchRef} className="relative w-full max-w-xs md:max-w-sm mx-auto">
+      <div ref={searchRef} className="relative w-full max-w-[280px] md:max-w-sm mx-auto">
         <div className="relative">
           <input
             ref={inputRef}
@@ -579,10 +694,10 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
             onBlur={() => {
               setIsFocused(false);
             }}
-            className="w-full px-3 py-1.5 md:px-4 md:py-2 pl-8 md:pl-10 pr-8 md:pr-10 bg-gray-800/50 border border-yellow-400/40 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-300 focus:ring-1 focus:ring-yellow-300 text-xs md:text-sm transition-all duration-200"
+            className="w-full px-4 py-3 md:px-4 md:py-2 pl-10 md:pl-10 pr-10 md:pr-10 bg-gray-800/50 border border-gray-600/50 md:border-yellow-400/40 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-500 md:focus:border-yellow-300 focus:ring-1 focus:ring-gray-500 md:focus:ring-yellow-300 text-sm md:text-sm transition-all duration-200"
           />
           <svg
-            className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-gray-400"
+            className="absolute left-3 md:left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-4 md:h-4 text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -594,9 +709,9 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
-          {/* Keyboard shortcut hint */}
+          {/* Keyboard shortcut hint - hidden on mobile */}
           {!isFocused && !searchQuery && (
-            <div className="absolute right-2.5 md:right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="absolute right-3 md:right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden md:block">
               <kbd className="px-1.5 py-0.5 text-xs font-medium text-gray-400 bg-gray-700/50 border border-gray-600/50 rounded shadow-sm">
                 /
               </kbd>
@@ -606,7 +721,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
 
         {/* Dropdown Results */}
         {showResults && (
-          <div className="absolute top-full left-0 right-0 mt-1 border border-yellow-400/40 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto token-dropdown-scrollbar" style={{ backgroundColor: '#1f2937' }}>
+          <div className="absolute top-full left-0 right-0 mt-1 border border-yellow-400/40 rounded-lg shadow-lg z-50 max-h-[60vh] md:max-h-64 overflow-y-auto token-dropdown-scrollbar" style={{ backgroundColor: '#1f2937' }}>
             {isLoading ? (
               <div className="p-4 text-center text-gray-400 text-sm">Loading tokens...</div>
             ) : filteredTokens.length > 0 ? (
@@ -630,16 +745,16 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                     <li
                       key={`${token.chainId}-${token.address}`}
                       onClick={() => handleTokenClick(token)}
-                      className="px-2 py-2 hover:bg-gray-600/50 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-3"
+                      className="px-3 py-3 md:px-2 md:py-2 hover:bg-gray-600/50 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-4 md:gap-3"
                     >
-                      <div className="relative w-6 h-6 flex-shrink-0">
+                      <div className="relative w-8 h-8 md:w-6 md:h-6 flex-shrink-0">
                         {!showFallback && displayLogoUrl ? (
                           <Image
                             src={displayLogoUrl}
                             alt={token.symbol}
-                            width={24}
-                            height={24}
-                            className="w-6 h-6 rounded-full"
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 md:w-6 md:h-6 rounded-full"
                             onError={() => {
                               // Mark the appropriate image source as failed
                               const failedKey = primaryLogoUrl && !primaryFailed 
@@ -652,7 +767,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                         {/* Fallback circle - shown when no logo or all image sources fail */}
                         {showFallback && (
                           <div
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold"
+                            className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center text-xs md:text-[10px] font-semibold"
                             style={{
                               backgroundColor: fallbackColor,
                               color: fallbackTextColor,
@@ -663,8 +778,8 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white text-sm font-medium">{token.symbol}</div>
-                        <div className="text-gray-400 text-xs truncate">{token.name}</div>
+                        <div className="text-white text-base md:text-sm font-medium">{token.symbol}</div>
+                        <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
                       </div>
                     </li>
                   );

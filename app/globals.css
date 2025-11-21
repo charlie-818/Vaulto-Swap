@@ -60,10 +60,23 @@ body {
   .text-6xl { font-size: 3rem; line-height: 3.5rem; }
   .text-7xl { font-size: 3.5rem; line-height: 4rem; }
   
-  /* Mobile header adjustments */
+  /* Mobile header adjustments - ensure sticky works */
+  header.sticky,
   .sticky {
-    position: -webkit-sticky;
-    position: sticky;
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Ensure header stays on top during scroll on mobile */
+  header[role="banner"] {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
   }
   
   /* Mobile footer positioning */
@@ -229,5 +242,166 @@ body {
 
 .animate-fade-in-up {
   animation: fadeInUp 1s ease-out;
+}
+
+/* RainbowKit Mobile Styling - Hide text, show only wallet icon, improve touch target */
+.rainbowkit-mobile-wrapper {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation !important;
+}
+
+/* Ensure mobile connect button has full hover and click area */
+@media (max-width: 767px) {
+  button[aria-label="Connect Wallet"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+  
+  button[aria-label="Connect Wallet"]:hover {
+    background: linear-gradient(to right, #fde047, #facc15) !important;
+  }
+  
+  button[aria-label="Connect Wallet"]:active {
+    background: linear-gradient(to right, #fef08a, #fde047) !important;
+    transform: scale(0.98) !important;
+  }
+  
+  button[aria-label="Connect Wallet"] svg {
+    pointer-events: none !important;
+    user-select: none !important;
+  }
+  
+  /* Ensure mobile disconnect button has full hover and click area */
+  button[aria-label="Disconnect Wallet"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+  
+  button[aria-label="Disconnect Wallet"]:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+  }
+  
+  button[aria-label="Disconnect Wallet"]:active {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    transform: scale(0.98) !important;
+  }
+  
+  button[aria-label="Disconnect Wallet"] svg {
+    pointer-events: none !important;
+    user-select: none !important;
+  }
+}
+
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"] {
+  background: linear-gradient(to right, #facc15, #eab308) !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+  padding: 0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.25) !important;
+  transition: all 0.2s !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  width: 44px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  border: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"]:hover,
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"]:active,
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"]:focus {
+  background: linear-gradient(to right, #fde047, #facc15) !important;
+  outline: none !important;
+}
+
+/* Hide all text and content completely */
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"] > * {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"] > div {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"] > span {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Custom wallet icon (cash/cards wallet) using ::before pseudo-element */
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"]::before {
+  content: '' !important;
+  display: block !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'/%3E%3C/svg%3E");
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* Hide any SVG that RainbowKit might render */
+.rainbowkit-mobile-wrapper button[data-testid="rk-connect-button"] svg {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.rainbowkit-mobile-wrapper button[data-testid="rk-account-button"] {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.75rem !important;
+  background: rgba(31, 41, 55, 0.5) !important;
+  border: 1px solid rgba(234, 179, 8, 0.4) !important;
+  border-radius: 0.5rem !important;
+  backdrop-filter: blur(4px) !important;
 }
 

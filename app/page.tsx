@@ -4,8 +4,10 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAccount, useDisconnect, useChainId } from "wagmi";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useRef, useState } from "react";
 import { trackWalletConnectClick, trackWalletConnected, trackWalletDisconnected } from "@/lib/utils/analytics";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import TokenSearch from "./components/TokenSearch";
 
 // Dynamically import the CoW widget to prevent SSR issues
@@ -16,8 +18,9 @@ const CowSwapWidgetWrapper = dynamic(
   }
 );
 
-// Custom wallet component with address and disconnect button
-function WalletButton() {
+// Desktop wallet button component (uses Web3Modal)
+// This component should only render after Web3Modal is initialized
+function DesktopWalletButton() {
   const { open } = useWeb3Modal();
   const { address, isConnected, connector } = useAccount();
   const { disconnect } = useDisconnect();
@@ -52,52 +55,300 @@ function WalletButton() {
     return (
       <button
         onClick={handleConnectClick}
-        className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 text-xs md:text-sm shadow-lg shadow-yellow-500/25"
+        className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2"
+        title="Connect Wallet"
+        aria-label="Connect Wallet"
       >
-        Connect
+        <svg
+          className="w-5 h-5 md:w-5 md:h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          />
+        </svg>
+        <span className="hidden md:inline text-sm">Connect</span>
       </button>
     );
   }
 
-  const formatAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  // When connected, show only disconnect icon
+  return (
+    <button
+      onClick={handleDisconnect}
+      className="px-2 py-1 md:px-3 md:py-2 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 flex items-center justify-center group"
+      title="Disconnect Wallet"
+      aria-label="Disconnect Wallet"
+    >
+      <svg 
+        className="w-5 h-5 md:w-6 md:h-6 text-red-400 group-hover:text-red-300 transition-colors duration-200" 
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+      >
+        <path 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          strokeWidth={2} 
+          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+        />
+      </svg>
+    </button>
+  );
+}
+
+// Mobile wallet button component (uses RainbowKit)
+function MobileWalletButton() {
+  const { address, isConnected, connector } = useAccount();
+  const chainId = useChainId();
+  const wasConnectedRef = useRef(false);
+  const connectButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Track wallet connection
+  useEffect(() => {
+    if (isConnected && address && !wasConnectedRef.current) {
+      trackWalletConnected(
+        address,
+        chainId,
+        connector?.name || 'unknown'
+      );
+      wasConnectedRef.current = true;
+    } else if (!isConnected && wasConnectedRef.current) {
+      trackWalletDisconnected();
+      wasConnectedRef.current = false;
+    }
+  }, [isConnected, address, chainId, connector]);
+
+  const { disconnect } = useDisconnect();
+
+  const handleMobileDisconnect = () => {
+    disconnect();
   };
 
-  return (
-    <div className="flex items-center gap-1 md:gap-2">
-      {/* Address bubble - Clickable to open wallet menu */}
-      <button
-        onClick={() => open()}
-        className="px-2 py-1 md:px-3 md:py-2 bg-gray-800/50 border border-yellow-400/40 rounded-lg backdrop-blur-sm hover:bg-gray-800/70 hover:border-yellow-300/60 transition-all duration-200 shadow-sm shadow-yellow-400/20"
-        title="Wallet Settings"
-      >
-        <span className="text-xs md:text-sm font-medium text-white">
-          {formatAddress(address!)}
-        </span>
-      </button>
-      
-      {/* Disconnect button - Hidden on mobile, visible on desktop */}
-      <button
-        onClick={handleDisconnect}
-        className="hidden md:block px-3 py-3 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 group"
-        title="Disconnect Wallet"
-      >
-        <svg 
-          className="w-4 h-4 text-red-400 group-hover:text-red-300 transition-colors duration-200" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
+  const handleMobileConnect = () => {
+    trackWalletConnectClick();
+    // Programmatically click the hidden ConnectButton to open RainbowKit modal
+    const connectButton = document.querySelector('[data-testid="rk-connect-button"]') as HTMLButtonElement;
+    if (connectButton) {
+      connectButton.click();
+    }
+  };
+
+  // When connected, show only disconnect icon
+  if (isConnected) {
+    return (
+      <div className="flex items-center justify-center" style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleMobileDisconnect();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="p-0 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 active:bg-red-500/30 active:border-red-500/60 transition-all duration-200 flex items-center justify-center group w-[44px] h-[44px] min-w-[44px] min-h-[44px] touch-manipulation"
+          style={{ 
+            width: '44px', 
+            height: '44px',
+            minWidth: '44px',
+            minHeight: '44px',
+            padding: 0,
+            margin: 0,
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            pointerEvents: 'auto',
+            cursor: 'pointer',
+            outline: 'none'
+          }}
+          title="Disconnect Wallet"
+          aria-label="Disconnect Wallet"
         >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" 
+          <svg 
+            className="w-5 h-5 text-red-400 group-hover:text-red-300 transition-colors duration-200" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+            />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  // When not connected, use ConnectButton.Custom to render only wallet icon
+  return (
+    <div className="flex items-center justify-center" style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}>
+      <ConnectButton.Custom>
+        {({ account, chain, openConnectModal, mounted }) => {
+          const ready = mounted;
+          const connected = ready && account && chain;
+
+          if (connected) {
+            return null; // This shouldn't happen as we check isConnected above, but just in case
+          }
+
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                trackWalletConnectClick();
+                openConnectModal();
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="p-0 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 active:from-yellow-200 active:to-yellow-300 text-black rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center w-[44px] h-[44px] min-w-[44px] min-h-[44px] touch-manipulation"
+              style={{ 
+                width: '44px', 
+                height: '44px',
+                minWidth: '44px',
+                minHeight: '44px',
+                padding: 0,
+                margin: 0,
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                pointerEvents: 'auto',
+                cursor: 'pointer',
+                border: 'none',
+                outline: 'none'
+              }}
+              title="Connect Wallet"
+              aria-label="Connect Wallet"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+            </button>
+          );
+        }}
+      </ConnectButton.Custom>
+    </div>
+  );
+}
+
+// Desktop wallet wrapper that ensures Web3Modal is ready
+function DesktopWalletWrapper() {
+  const [ready, setReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Check if Web3Modal is available
+    const checkWeb3Modal = () => {
+      try {
+        // Try to access Web3Modal - if it throws, it's not ready
+        if (typeof window !== "undefined") {
+          // Give Web3Modal time to initialize after mount
+          const timer = setTimeout(() => {
+            setReady(true);
+          }, 150);
+          return () => clearTimeout(timer);
+        }
+      } catch (error) {
+        // Web3Modal not ready yet
+        console.warn("Web3Modal not ready:", error);
+      }
+    };
+    
+    const cleanup = checkWeb3Modal();
+    return cleanup;
+  }, []);
+
+  // During SSR, render a placeholder that matches the initial client render
+  if (!mounted || !ready) {
+    return (
+      <button
+        className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2"
+        disabled
+        suppressHydrationWarning
+        title="Connect Wallet"
+        aria-label="Connect Wallet"
+      >
+        <svg
+          className="w-5 h-5 md:w-5 md:h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          />
+        </svg>
+        <span className="hidden md:inline text-sm">Connect</span>
+      </button>
+    );
+  }
+
+  return <DesktopWalletButton />;
+}
+
+// Custom wallet component with address and disconnect button
+function WalletButton() {
+  const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show nothing during SSR
+  if (!mounted) {
+    return (
+      <button
+        className="px-2 py-1 md:px-3 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center"
+        disabled
+        title="Connect Wallet"
+        aria-label="Connect Wallet"
+      >
+        <svg
+          className="w-5 h-5 md:w-6 md:h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
           />
         </svg>
       </button>
-    </div>
-  );
+    );
+  }
+
+  // Render mobile or desktop version
+  if (isMobile) {
+    return <MobileWalletButton />;
+  }
+
+  return <DesktopWalletWrapper />;
 }
 
 export default function Home() {
@@ -138,8 +389,8 @@ export default function Home() {
           <div className="w-full h-full bg-gradient-to-tl from-purple-500/35 via-purple-400/25 to-transparent blur-3xl"></div>
         </div>
       </div>
-      {/* Header */}
-      <header className={`sticky top-0 left-0 right-0 z-50 backdrop-blur-sm transition-all duration-300 border-b pt-2 ${isScrolled ? 'bg-black/80 border-gray-800 pb-2' : 'bg-transparent border-transparent'}`} role="banner">
+      {/* Header - Sticky on mobile */}
+      <header className={`sticky top-0 left-0 right-0 z-50 backdrop-blur-sm transition-all duration-300 border-b pt-2 w-full ${isScrolled ? 'bg-black/80 border-gray-800 pb-2' : 'bg-transparent border-transparent'}`} role="banner" style={{ position: 'sticky', top: 0 }}>
         <div className="container mx-auto px-4 py-3 relative">
           <div className="flex items-center justify-between gap-2 md:gap-4">
             <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
@@ -202,12 +453,12 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="relative z-10 container mx-auto px-4 min-h-screen py-6 sm:py-8 pt-8 md:pt-12">
+      <div className="relative z-10 container mx-auto px-4 min-h-screen py-6 sm:py-8 pt-2 md:pt-12">
         <section aria-label="Token swap interface" className="w-full">
           <h1 className="sr-only">Vaulto Swap - Trade Tokenized Stocks with Stablecoins</h1>
           
           {/* Typography Section */}
-          <div className="text-center mb-8 mt-0 md:mt-0 pt-16 md:pt-0">
+          <div className="text-center mb-8 mt-0 md:mt-0 pt-4 md:pt-0">
             <h2 className="text-7xl sm:text-8xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 via-yellow-500 to-yellow-400 mb-3 sm:mb-4 tracking-tight drop-shadow-lg" style={{textShadow: '0 0 20px rgba(255, 215, 0, 0.3)'}}>
               Vaulto
             </h2>
