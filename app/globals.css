@@ -75,7 +75,7 @@ body {
       overflow: hidden !important;
     }
     
-    /* Make main flex to fill remaining space after header */
+    /* Make main flex to fill remaining space after header and allow scrolling */
     main {
       flex: 1 1 auto;
       min-height: 0;
@@ -83,33 +83,37 @@ body {
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       position: relative;
+      height: 100%;
     }
     
-    /* Content container should fill available space and be scrollable */
+    /* Landing section container - fixed height on mobile (120vh = full viewport + 20%) */
+    /* This ensures users must scroll to see the Private Markets section below */
+    main > div.container.relative.z-10 {
+      flex-shrink: 0 !important;
+      flex-grow: 0 !important;
+      height: 120svh !important;
+      height: 120vh !important;
+      max-height: 120svh !important;
+      max-height: 120vh !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    
+    /* Content container should fill available space */
     main > div.container {
-      min-height: 100%;
       display: flex;
       flex-direction: column;
     }
     
-    /* Section should grow to fill space */
+    /* Section should fill the fixed height container */
     section[aria-label="Token swap interface"] {
+      height: 100% !important;
+      min-height: 100% !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
       flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    /* Mobile-only: Set landing section to exactly 100% viewport height */
-    /* These ensure mobile heights override any flex shrinking */
-    main > div.relative.z-10.container {
-      min-height: 100svh !important;
-      min-height: -webkit-fill-available !important;
-    }
-    
-    section[aria-label="Token swap interface"] {
-      min-height: 100svh !important;
-      min-height: -webkit-fill-available !important;
     }
   }
   
