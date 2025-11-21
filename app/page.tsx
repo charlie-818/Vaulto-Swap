@@ -453,7 +453,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="relative z-10 container mx-auto px-4 flex flex-col md:block h-[120vh] md:h-auto md:min-h-screen py-4 md:py-6 sm:py-8 pt-2 md:pt-12 overflow-hidden md:overflow-visible">
+      <div className="relative z-10 container mx-auto px-4 flex flex-col md:block h-[90vh] md:h-auto md:min-h-screen py-4 md:py-6 sm:py-8 pt-2 md:pt-12 overflow-hidden md:overflow-visible">
         <section aria-label="Token swap interface" className="w-full h-full flex flex-col md:block md:h-auto md:min-h-0">
           <h1 className="sr-only">Vaulto Swap - Trade Tokenized Stocks with Stablecoins</h1>
           

@@ -86,15 +86,15 @@ body {
       height: 100%;
     }
     
-    /* Landing section container - fixed height on mobile (120vh = full viewport + 20%) */
+    /* Landing section container - fixed height on mobile (90vh = reduced by 25% from 120vh) */
     /* This ensures users must scroll to see the Private Markets section below */
     main > div.container.relative.z-10 {
       flex-shrink: 0 !important;
       flex-grow: 0 !important;
-      height: 120svh !important;
-      height: 120vh !important;
-      max-height: 120svh !important;
-      max-height: 120vh !important;
+      height: 90svh !important;
+      height: 90vh !important;
+      max-height: 90svh !important;
+      max-height: 90vh !important;
       overflow: hidden !important;
       display: flex !important;
       flex-direction: column !important;
