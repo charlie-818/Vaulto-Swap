@@ -421,6 +421,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     if (!logoURI) return undefined;
     
     // If it's already an absolute URL (starts with http:// or https://), return as-is
+    // This handles URLs from coin-images.coingecko.com and other external sources
     if (logoURI.startsWith('http://') || logoURI.startsWith('https://')) {
       return logoURI;
     }
@@ -430,12 +431,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
       return typeof window !== 'undefined' ? `${window.location.origin}${logoURI}` : logoURI;
     }
     
-    // For other relative URLs, assume they're relative to the API base URL
-    // This handles cases where logoURI might be relative to the API endpoint
-    if (typeof window !== 'undefined') {
-      return logoURI;
-    }
-    
+    // For other relative URLs, return as-is (they might be handled elsewhere)
     return logoURI;
   }, []);
 
@@ -826,12 +822,26 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                             width={32}
                             height={32}
                             className="w-8 h-8 md:w-6 md:h-6 rounded-full"
-                            onError={() => {
-                              // Mark the appropriate image source as failed
+                            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                              console.warn('TokenSearch: Failed to load logo', {
+                                symbol: token.symbol,
+                                logoUrl: displayLogoUrl,
+                                logoURI: token.logoURI,
+                                error: e
+                              });
                               const failedKey = primaryLogoUrl && !primaryFailed 
                                 ? `${logoKey}-primary` 
                                 : `${logoKey}-uniswap`;
                               setFailedImages(prev => new Set(prev).add(failedKey));
+                            }}
+                            onLoad={() => {
+                              if (filteredTokens.indexOf(token) < 2) {
+                                console.debug('TokenSearch: Logo loaded successfully', {
+                                  symbol: token.symbol,
+                                  logoUrl: displayLogoUrl,
+                                  logoURI: token.logoURI
+                                });
+                              }
                             }}
                           />
                         ) : null}

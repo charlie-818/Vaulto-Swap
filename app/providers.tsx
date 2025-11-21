@@ -6,7 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
 import { walletConnect, injected, coinbaseWallet } from "wagmi/connectors";
 import { Toaster } from "react-hot-toast";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, darkTheme, connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { 
+  metaMaskWallet,
+  coinbaseWallet as coinbaseWalletRainbowKit, 
+  trustWallet 
+} from "@rainbow-me/rainbowkit/wallets";
 import { useEffect, useState } from "react";
 import "@rainbow-me/rainbowkit/styles.css";
 
@@ -20,10 +25,33 @@ if (!projectId) {
   console.warn("⚠️ WalletConnect Project ID not set. Please add NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to your .env.local file.");
 }
 
+// Supported chains
+const chains = [mainnet, arbitrum, optimism, base, polygon, sepolia, arbitrumSepolia] as const;
+
+// Configure RainbowKit wallets - only MetaMask, Coinbase Wallet, and Trust Wallet
+// RainbowKit will automatically detect these wallets from the connectors in wagmi config
+
+// Configure wagmi connectors - only include connectors for MetaMask, Coinbase Wallet, and Trust Wallet
+const rainbowKitConnectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [
+        metaMaskWallet,
+        coinbaseWalletRainbowKit,
+        trustWallet,
+      ],
+    },
+  ],
+  { appName: 'Vaulto Swap', projectId }
+);
+
 // Configure wagmi
 const config = createConfig({
-  chains: [mainnet, arbitrum, optimism, base, polygon, sepolia, arbitrumSepolia],
+  chains,
   connectors: [
+    ...rainbowKitConnectors,
+    // Keep WalletConnect connector for Web3Modal (desktop)
     walletConnect({ 
       projectId,
       metadata: {
@@ -33,11 +61,6 @@ const config = createConfig({
         icons: [typeof window !== 'undefined' ? `${window.location.origin}/favicon.png` : "https://swap.vaulto.ai/favicon.png"],
       },
       showQrModal: false,
-    }),
-    injected({ shimDisconnect: true }),
-    coinbaseWallet({
-      appName: "Vaulto Swap",
-      appLogoUrl: typeof window !== 'undefined' ? `${window.location.origin}/favicon.png` : "https://swap.vaulto.ai/favicon.png",
     }),
   ],
   transports: {
@@ -150,6 +173,9 @@ function MobileProviderWrapper({ children }: { children: React.ReactNode }) {
         theme={rainbowKitTheme}
         initialChain={mainnet}
         modalSize="compact"
+        appInfo={{
+          appName: 'Vaulto Swap',
+        }}
       >
         {children}
       </RainbowKitProvider>
