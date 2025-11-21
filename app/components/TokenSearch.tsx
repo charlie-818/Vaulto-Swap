@@ -449,16 +449,29 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     );
     
     // Combine all tokens and remove duplicates
-    const allTokens = [...standardChainTokens, ...vaultoChainTokens, ...chainTokens];
+    // Priority: API tokens (chainTokens) first, then standard tokens, then Vaulto tokens
+    // This ensures tokens with logoURI from API are preserved
+    const allTokens = [...chainTokens, ...standardChainTokens, ...vaultoChainTokens];
     const uniqueTokens = allTokens.reduce((acc, token) => {
       const key = `${token.chainId}-${token.address.toLowerCase()}`;
-      if (!acc.has(key)) {
-        // Normalize logoURI if present
+      const existing = acc.get(key);
+      
+      // If token doesn't exist yet, add it
+      if (!existing) {
         const normalizedToken = {
           ...token,
           logoURI: normalizeLogoURI(token.logoURI)
         };
         acc.set(key, normalizedToken);
+      } else {
+        // If token exists but new one has logoURI and existing doesn't, prefer the one with logoURI
+        const normalizedLogoURI = normalizeLogoURI(token.logoURI);
+        if (normalizedLogoURI && !existing.logoURI) {
+          acc.set(key, {
+            ...existing,
+            logoURI: normalizedLogoURI
+          });
+        }
       }
       return acc;
     }, new Map<string, Token>());
@@ -783,9 +796,19 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                   const fetchedLogoUrl = logoUrls.get(logoKey);
                   
                   // Prioritize logoURI from API/token data first, then fetched logo, then fallback
+                  // logoURI should be used immediately if present - it's the highest priority source
                   const primaryLogoUrl = token.logoURI || fetchedLogoUrl || null;
                   const primaryFailed = primaryLogoUrl && failedImages.has(`${logoKey}-primary`);
-                  const uniswapFallbackUrl = (!primaryLogoUrl || primaryFailed) ? getUniswapAssetsUrl(token.chainId, token.address) : null;
+                  
+                  // Only use Uniswap fallback if:
+                  // 1. We don't have a primary logo AND
+                  // 2. We haven't already tried fetching (fetchedLogoUrl is not explicitly null) AND
+                  // 3. We're not currently fetching (to avoid race conditions)
+                  // If fetchedLogoUrl === null, it means we already tried Uniswap GraphQL and it failed,
+                  // so we shouldn't try the Uniswap assets URL either (likely a custom token)
+                  const isCurrentlyFetching = fetchingLogos.has(logoKey);
+                  const shouldTryUniswapFallback = (!primaryLogoUrl || primaryFailed) && fetchedLogoUrl !== null && !isCurrentlyFetching;
+                  const uniswapFallbackUrl = shouldTryUniswapFallback ? getUniswapAssetsUrl(token.chainId, token.address) : null;
                   const uniswapFailed = uniswapFallbackUrl && failedImages.has(`${logoKey}-uniswap`);
                   const displayLogoUrl = (!primaryFailed && primaryLogoUrl) || (!uniswapFailed && uniswapFallbackUrl) || null;
                   const showFallback = !displayLogoUrl;

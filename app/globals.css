@@ -19,9 +19,11 @@ body {
   background: var(--background);
   font-family: var(--font-inter);
   min-height: 100vh;
+  min-height: 100svh; /* Use small viewport height to prevent mobile layout shifts */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  position: relative;
 }
 
 /* Mobile-specific optimizations */
@@ -34,6 +36,26 @@ body {
   /* Prevent horizontal scroll on mobile */
   html, body {
     overflow-x: hidden;
+    position: relative;
+  }
+  
+  /* Prevent layout shift from address bar on mobile - use small viewport height */
+  html {
+    height: 100svh;
+    height: -webkit-fill-available; /* Fallback for Safari iOS */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body {
+    min-height: 100svh;
+    min-height: -webkit-fill-available; /* Fallback for Safari iOS */
+  }
+  
+  /* Use small viewport height to prevent layout shifts when browser UI appears/disappears */
+  .min-h-screen {
+    min-height: 100svh;
+    min-height: -webkit-fill-available; /* Fallback for Safari iOS */
   }
   
   /* Improve touch targets */
@@ -46,12 +68,6 @@ body {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
-  }
-  
-  /* Better mobile viewport handling */
-  .min-h-screen {
-    min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
   }
   
   /* Mobile-specific typography adjustments */
@@ -83,6 +99,23 @@ body {
   .fixed {
     position: -webkit-fixed;
     position: fixed;
+  }
+  
+  /* Prevent layout shifts on mobile scroll - ensure viewport is stable */
+  main {
+    will-change: scroll-position;
+    transform: translateZ(0); /* Force GPU acceleration for smooth scrolling */
+  }
+  
+  /* Prevent content jumping when header/footer styles change */
+  header[role="banner"] {
+    will-change: background-color, border-color;
+    backface-visibility: hidden;
+  }
+  
+  footer[role="contentinfo"] {
+    will-change: background-color, border-color;
+    backface-visibility: hidden;
   }
 }
 

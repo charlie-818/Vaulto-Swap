@@ -27,6 +27,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+        pathname: '/trustwallet/assets/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'token-icons.s3.amazonaws.com',
       },
       {
