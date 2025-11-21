@@ -365,8 +365,8 @@ export default function Home() {
   }, []);
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
-      <main className="relative">
+    <div className="min-h-screen h-screen md:min-h-screen md:h-auto bg-gradient-to-br from-black via-gray-900 to-black flex flex-col md:block">
+      <main className="relative flex-1 flex flex-col md:block min-h-0">
       {/* Subtle Gold Gradient Overlays */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {/* Top-left gold glow */}
@@ -453,21 +453,21 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="relative z-10 container mx-auto px-4 min-h-screen py-6 sm:py-8 pt-2 md:pt-12">
-        <section aria-label="Token swap interface" className="w-full">
+      <div className="relative z-10 container mx-auto px-4 flex-1 flex flex-col md:block min-h-0 min-h-[100vh] md:min-h-0 py-4 md:py-6 sm:py-8 pt-2 md:pt-12 md:min-h-screen">
+        <section aria-label="Token swap interface" className="w-full flex-1 flex flex-col md:block min-h-[100vh] md:min-h-0">
           <h1 className="sr-only">Vaulto Swap - Trade Tokenized Stocks with Stablecoins</h1>
           
           {/* Typography Section */}
-          <div className="text-center mb-8 mt-0 md:mt-0 pt-4 md:pt-0">
-            <h2 className="text-7xl sm:text-8xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 via-yellow-500 to-yellow-400 mb-3 sm:mb-4 tracking-tight drop-shadow-lg" style={{textShadow: '0 0 20px rgba(255, 215, 0, 0.3)'}}>
+          <div className="text-center mb-6 md:mb-8 mt-0 md:mt-0 pt-4 md:pt-0">
+            <h2 className="text-6xl sm:text-7xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 via-yellow-500 to-yellow-400 mb-3 sm:mb-4 md:mb-4 tracking-tight drop-shadow-lg" style={{textShadow: '0 0 20px rgba(255, 215, 0, 0.3)'}}>
               Vaulto
             </h2>
-            <p className="text-white text-lg sm:text-xl md:text-2xl font-light">
+            <p className="text-white text-base sm:text-lg md:text-xl lg:text-2xl font-light mb-6 md:mb-0">
               Trade Stocks 24/7
             </p>
           </div>
           
-          <div className="w-full max-w-6xl mx-auto">
+          <div className="w-full max-w-6xl mx-auto flex-1 flex flex-col md:block">
             <CowSwapWidgetWrapper />
           </div>
         </section>

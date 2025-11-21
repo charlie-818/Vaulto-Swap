@@ -58,6 +58,61 @@ body {
     min-height: -webkit-fill-available; /* Fallback for Safari iOS */
   }
   
+  /* Full viewport height for mobile - exact height, no more, no less */
+  .h-screen {
+    height: 100svh;
+    height: -webkit-fill-available; /* Fallback for Safari iOS */
+  }
+  
+  /* Flex layout for full viewport on mobile */
+  @media (max-width: 768px) {
+    /* Ensure root div with h-screen fills viewport exactly */
+    div.h-screen {
+      height: 100svh !important;
+      height: -webkit-fill-available !important;
+      max-height: 100svh !important;
+      max-height: -webkit-fill-available !important;
+      overflow: hidden !important;
+    }
+    
+    /* Make main flex to fill remaining space after header */
+    main {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+    
+    /* Content container should fill available space and be scrollable */
+    main > div.container {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Section should grow to fill space */
+    section[aria-label="Token swap interface"] {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Mobile-only: Set landing section to exactly 100% viewport height */
+    /* These ensure mobile heights override any flex shrinking */
+    main > div.relative.z-10.container {
+      min-height: 100svh !important;
+      min-height: -webkit-fill-available !important;
+    }
+    
+    section[aria-label="Token swap interface"] {
+      min-height: 100svh !important;
+      min-height: -webkit-fill-available !important;
+    }
+  }
+  
   /* Improve touch targets */
   button, a, input, select, textarea {
     min-height: 44px;
