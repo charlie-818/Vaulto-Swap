@@ -235,7 +235,7 @@ body {
 }
 
 .token-dropdown-scrollbar::-webkit-scrollbar-track {
-  background: rgb(17, 24, 39); /* bg-gray-900 */
+  background: rgb(31, 41, 55); /* bg-gray-800 - matches dropdown background */
 }
 
 .token-dropdown-scrollbar::-webkit-scrollbar-thumb {
@@ -245,6 +245,12 @@ body {
 
 .token-dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.7); /* gray-400 with more opacity on hover */
+}
+
+/* Firefox scrollbar support for token dropdown */
+.token-dropdown-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) rgb(31, 41, 55); /* thumb color, track color */
 }
 
 /* Scroll-triggered animations */

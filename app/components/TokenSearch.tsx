@@ -8,6 +8,7 @@ import { formatTVL, formatFeeTier, truncateAddress } from '@/lib/utils/formatter
 import { isChainSupported } from '@/lib/uniswap/subgraphs';
 import { chainConfig } from '@/config/chains';
 import type { LiquidityApiResponse, LiquidityTokenResult } from '@/app/components/search/types';
+import toast from 'react-hot-toast';
 
 interface Token {
   address: string;
@@ -644,74 +645,111 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
   useEffect(() => {
     const fetchTokens = async () => {
       setIsLoading(true);
+      const allTokens: Token[] = [];
+      
       try {
-        // Try API first
-        try {
-          const response = await fetch('https://vaulto.dev/api/token-list/');
-          if (response.ok) {
-            const data = await response.json();
-            const apiTokens: Token[] = data.tokens || [];
-            const tokensWithLogos = apiTokens.filter(t => t.logoURI);
-            console.log('TokenSearch: Loaded tokens from API', {
-              chainId,
-              apiTokensCount: apiTokens.length,
-              tokensWithLogoURICount: tokensWithLogos.length,
-              sampleTokens: apiTokens.slice(0, 3).map(t => ({ 
-                symbol: t.symbol, 
-                chainId: t.chainId,
-                hasLogoURI: !!t.logoURI,
-                logoURI: t.logoURI 
-              })),
-              sampleTokensWithLogos: tokensWithLogos.slice(0, 3).map(t => ({
-                symbol: t.symbol,
-                logoURI: t.logoURI
-              }))
-            });
-            processAndSetTokens(apiTokens);
-            return;
-          } else {
-            console.warn('TokenSearch: API response not OK', { status: response.status, statusText: response.statusText });
-          }
-        } catch (error) {
-          console.warn('TokenSearch: Error fetching token list from API:', error);
-        }
+        // Fetch all token sources in parallel
+        const fetchPromises = [
+          // Try Uniswap token list first (primary source)
+          fetch('https://ipfs.io/ipns/tokens.uniswap.org')
+            .then(async (response) => {
+              if (response.ok) {
+                const data = await response.json();
+                const uniswapTokens: Token[] = data.tokens || [];
+                if (uniswapTokens.length > 0) {
+                  const tokensWithLogos = uniswapTokens.filter(t => t.logoURI);
+                  console.log('TokenSearch: Loaded tokens from Uniswap list (primary source)', {
+                    chainId,
+                    uniswapTokensCount: uniswapTokens.length,
+                    tokensWithLogoURICount: tokensWithLogos.length,
+                    sampleTokens: uniswapTokens.slice(0, 3).map(t => ({ 
+                      symbol: t.symbol, 
+                      chainId: t.chainId,
+                      hasLogoURI: !!t.logoURI,
+                      logoURI: t.logoURI 
+                    }))
+                  });
+                  return uniswapTokens;
+                }
+              } else {
+                console.warn('TokenSearch: Uniswap list response not OK', { status: response.status, statusText: response.statusText });
+              }
+              return [];
+            })
+            .catch((error) => {
+              console.warn('TokenSearch: Error fetching Uniswap token list:', error);
+              return [];
+            }),
+          
+          // Try static token-list.json file
+          fetch('/token-list.json')
+            .then(async (response) => {
+              if (response.ok) {
+                const data = await response.json();
+                // Handle both API format { tokens: [...] } and file format { name, version, tokens: [...] }
+                const staticTokens: Token[] = data.tokens || [];
+                if (staticTokens.length > 0) {
+                  console.log('TokenSearch: Loaded tokens from static file', {
+                    chainId,
+                    staticTokensCount: staticTokens.length,
+                    sampleTokens: staticTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
+                  });
+                  return staticTokens;
+                }
+              } else {
+                console.warn('TokenSearch: Static file response not OK', { status: response.status, statusText: response.statusText });
+              }
+              return [];
+            })
+            .catch((error) => {
+              console.warn('TokenSearch: Error fetching token list from static file:', error);
+              return [];
+            })
+        ];
+
+        // Wait for all fetches to complete
+        const tokenArrays = await Promise.all(fetchPromises);
         
-        // Fallback to static token-list.json file
-        try {
-          const response = await fetch('/token-list.json');
-          if (response.ok) {
-            const data = await response.json();
-            // Handle both API format { tokens: [...] } and file format { name, version, tokens: [...] }
-            const apiTokens: Token[] = data.tokens || [];
-            console.log('TokenSearch: Loaded tokens from static file', {
-              chainId,
-              apiTokensCount: apiTokens.length,
-              sampleTokens: apiTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
-            });
-            if (apiTokens.length > 0) {
-              processAndSetTokens(apiTokens);
-              return;
-            }
-          } else {
-            console.warn('TokenSearch: Static file response not OK', { status: response.status, statusText: response.statusText });
+        // Combine all tokens from different sources
+        tokenArrays.forEach(tokens => {
+          if (tokens && tokens.length > 0) {
+            allTokens.push(...tokens);
           }
-        } catch (error) {
-          console.warn('TokenSearch: Error fetching token list from static file:', error);
+        });
+
+        // Process and set tokens if we got any from external sources
+        if (allTokens.length > 0) {
+          console.log('TokenSearch: Combined tokens from all sources', {
+            chainId,
+            totalTokensCount: allTokens.length,
+            sources: ['Uniswap List', 'Static File'].filter((_, i) => tokenArrays[i]?.length > 0)
+          });
+          processAndSetTokens(allTokens);
+        } else {
+          // Final fallback to hardcoded tokens only
+          console.warn('TokenSearch: Using hardcoded token fallback - all external sources unavailable');
+          const cowChainId = getCowChainId(chainId);
+          const fallbackTokens = [
+            ...standardTokens.filter(t => t.chainId === cowChainId || (cowChainId !== 1 && t.chainId === 1)),
+            ...vaultoTokens.filter(t => t.chainId === cowChainId)
+          ];
+          console.log('TokenSearch: Using fallback tokens', {
+            chainId,
+            cowChainId,
+            fallbackTokensCount: fallbackTokens.length,
+            sampleTokens: fallbackTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
+          });
+          setTokens(fallbackTokens);
+          fetchTokenLogos(fallbackTokens);
         }
-        
-        // Final fallback to hardcoded tokens only
-        console.warn('TokenSearch: Using hardcoded token fallback - API and static file unavailable');
+      } catch (error) {
+        console.error('TokenSearch: Unexpected error fetching tokens:', error);
+        // Fallback to hardcoded tokens on unexpected error
         const cowChainId = getCowChainId(chainId);
         const fallbackTokens = [
           ...standardTokens.filter(t => t.chainId === cowChainId || (cowChainId !== 1 && t.chainId === 1)),
           ...vaultoTokens.filter(t => t.chainId === cowChainId)
         ];
-        console.log('TokenSearch: Using fallback tokens', {
-          chainId,
-          cowChainId,
-          fallbackTokensCount: fallbackTokens.length,
-          sampleTokens: fallbackTokens.slice(0, 3).map(t => ({ symbol: t.symbol, chainId: t.chainId }))
-        });
         setTokens(fallbackTokens);
         fetchTokenLogos(fallbackTokens);
       } finally {
@@ -738,16 +776,117 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     return isMobile ? defaultTokens.slice(0, 4) : defaultTokens;
   }, [tokens, chainId, isMobile]);
 
+  // Enrich default tokens with Uniswap liquidity data
+  const enrichDefaultTokensWithUniswapData = useCallback(async (
+    defaultTokens: Token[]
+  ): Promise<Token[]> => {
+    if (defaultTokens.length === 0 || !isChainSupported(chainId)) {
+      return defaultTokens;
+    }
+
+    try {
+      // Create a map to deduplicate tokens by address
+      const tokenMap = new Map<string, Token>();
+      
+      // Add default tokens first
+      defaultTokens.forEach((token) => {
+        const key = `${token.chainId}-${token.address.toLowerCase()}`;
+        tokenMap.set(key, token);
+      });
+
+      // Fetch Uniswap liquidity data for each default token
+      // We'll search by each token's symbol
+      const enrichmentPromises = defaultTokens.map(async (token) => {
+        try {
+          const liquidityData = await fetchUniswapLiquidity(chainId, token.symbol);
+          
+          if (liquidityData.tokens && liquidityData.tokens.length > 0) {
+            // Find the matching token in the Uniswap results by address
+            const matchingLiquidityToken = liquidityData.tokens.find(
+              (lt) => lt.address.toLowerCase() === token.address.toLowerCase()
+            );
+            
+            if (matchingLiquidityToken) {
+              const uniswapToken = liquidityTokenToSearchResult(matchingLiquidityToken, chainId);
+              const key = `${uniswapToken.chainId}-${uniswapToken.address.toLowerCase()}`;
+              const existing = tokenMap.get(key);
+              
+              if (existing) {
+                // Merge: keep local token data but add Uniswap TVL/pools
+                tokenMap.set(key, {
+                  ...existing,
+                  tvlUSD: uniswapToken.tvlUSD,
+                  pools: uniswapToken.pools,
+                });
+              }
+            }
+          }
+        } catch (error) {
+          // Silently fail for individual tokens, continue with others
+          console.debug(`Failed to enrich ${token.symbol} with Uniswap data:`, error);
+        }
+      });
+
+      await Promise.all(enrichmentPromises);
+
+      // Convert map back to array and maintain original order
+      const enrichedTokens = defaultTokens.map((token) => {
+        const key = `${token.chainId}-${token.address.toLowerCase()}`;
+        return tokenMap.get(key) || token;
+      });
+
+      return enrichedTokens;
+    } catch (error) {
+      console.error('Error enriching default tokens with Uniswap data:', error);
+      // Return original tokens on error
+      return defaultTokens;
+    }
+  }, [chainId]);
+
   // Filter tokens based on search query with Uniswap integration
   useEffect(() => {
     if (!searchQuery.trim()) {
       // Show default tokens when search is open but no query
       if (isOpen) {
-        setFilteredTokens(getDefaultTokens());
+        const defaultTokens = getDefaultTokens();
+        
+        // Enrich default tokens with Uniswap liquidity data
+        if (defaultTokens.length > 0 && isChainSupported(chainId)) {
+          setIsLoadingUniswap(true);
+          enrichDefaultTokensWithUniswapData(defaultTokens)
+            .then((enrichedTokens) => {
+              // Sort enriched tokens by TVL (highest to lowest)
+              const sortedTokens = enrichedTokens.sort((a, b) => {
+                const aTVL = getSortTVL(a);
+                const bTVL = getSortTVL(b);
+                
+                // Sort by TVL descending (highest to lowest)
+                if (bTVL !== aTVL) {
+                  return bTVL - aTVL;
+                }
+                
+                // If TVL is equal (including both 0), fallback to alphabetical by symbol
+                return a.symbol.localeCompare(b.symbol);
+              });
+              
+              setFilteredTokens(sortedTokens);
+              setIsLoadingUniswap(false);
+            })
+            .catch((error) => {
+              console.error('Error enriching default tokens:', error);
+              // Fallback to unenriched tokens
+              setFilteredTokens(defaultTokens);
+              setIsLoadingUniswap(false);
+            });
+        } else {
+          // No enrichment needed or not supported
+          setFilteredTokens(defaultTokens);
+          setIsLoadingUniswap(false);
+        }
       } else {
         setFilteredTokens([]);
+        setIsLoadingUniswap(false);
       }
-      setIsLoadingUniswap(false);
       return;
     }
 
@@ -880,12 +1019,23 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
         abortControllerRef.current = null;
       }
     };
-  }, [searchQuery, tokens, isOpen, getDefaultTokens, isMobile, chainId]);
+  }, [searchQuery, tokens, isOpen, getDefaultTokens, isMobile, chainId, enrichDefaultTokensWithUniswapData]);
 
-  // Keyboard shortcut: "/" to open search
+  // Keyboard shortcuts: "/" to open search, "Escape" to close
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Only trigger if "/" is pressed
+      // Handle Escape key to close search dropdown
+      if (event.key === 'Escape') {
+        if (isOpen) {
+          event.preventDefault();
+          setIsOpen(false);
+          setSearchQuery('');
+          inputRef.current?.blur();
+        }
+        return;
+      }
+
+      // Handle "/" key to open search
       if (event.key !== '/') return;
 
       // Check if user is typing in another input/textarea/contenteditable
@@ -917,7 +1067,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -1050,9 +1200,15 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
 
         {/* Dropdown Results */}
         {showResults && (
-          <div className="absolute top-full left-0 right-0 mt-1 border border-yellow-400/40 rounded-lg shadow-lg z-50 max-h-[60vh] md:max-h-64 overflow-y-auto token-dropdown-scrollbar" style={{ backgroundColor: '#1f2937' }}>
+          <div className="absolute top-full left-0 right-0 mt-1 border border-gray-600/50 rounded-lg shadow-lg z-50 max-h-[60vh] md:max-h-64 overflow-y-auto token-dropdown-scrollbar" style={{ backgroundColor: '#1f2937' }}>
             {isLoading || isLoadingUniswap ? (
-              <div className="p-4 text-center text-gray-400 text-sm">Loading tokens...</div>
+              <div className="p-4 flex flex-col items-center justify-center gap-2">
+                <div className="relative w-6 h-6">
+                  <div className="absolute inset-0 border-2 border-yellow-400/20 rounded-full"></div>
+                  <div className="absolute inset-0 border-2 border-transparent border-t-yellow-400 rounded-full animate-spin"></div>
+                </div>
+                <span className="text-gray-400 text-sm">Loading tokens...</span>
+              </div>
             ) : filteredTokens.length > 0 ? (
               <ul className="py-2 px-2">
                 {filteredTokens.map((token) => {
@@ -1152,7 +1308,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                             {(() => {
                               const poolPair = getTopPoolPair(token);
                               if (poolPair) {
-                                return <span className="text-gray-400 font-normal"> ({poolPair})</span>;
+                                return <span className="text-gray-400 font-normal text-xs md:text-[10px]"> ({poolPair})</span>;
                               }
                               return null;
                             })()}
@@ -1174,35 +1330,69 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
-                          {(() => {
-                            const explorerUrl = getExplorerUrl(token.chainId, token.address);
-                            if (!explorerUrl) return null;
-                            return (
-                              <a
-                                href={explorerUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
-                                title="View on Explorer"
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(token.address);
+                                toast.success('Address copied!', {
+                                  duration: 2000,
+                                  style: {
+                                    background: 'rgba(15, 23, 42, 0.95)',
+                                    color: '#fff',
+                                    border: '1px solid rgba(250, 204, 21, 0.3)',
+                                  },
+                                });
+                              }}
+                              className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                              title="Copy address"
+                              aria-label="Copy address"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-3 h-3"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                  className="w-3 h-3"
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </button>
+                            {(() => {
+                              const explorerUrl = getExplorerUrl(token.chainId, token.address);
+                              if (!explorerUrl) return null;
+                              return (
+                                <a
+                                  href={explorerUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                  title="View on Explorer"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-                              </a>
-                            );
-                          })()}
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                    className="w-3 h-3"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                </a>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </div>
                     </li>
