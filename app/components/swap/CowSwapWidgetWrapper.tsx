@@ -331,14 +331,24 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   // Handle token selection from header search
   const handleTokenSelect = useCallback((token: Token, type: 'sell' | 'buy') => {
     console.log('Token selected:', { token: token.symbol, type, address: token.address });
+    const cowChainId = getCowChainId(chainId);
+    
     if (type === 'sell') {
       setSellToken(token.symbol);
-      trackTokenSelected('sell', token.symbol, token.address, getCowChainId(chainId));
+      // If buy token is same as sell token, reset buy token to default
+      if (buyToken === token.symbol) {
+        setBuyToken('NVDAon');
+      }
+      trackTokenSelected('sell', token.symbol, token.address, cowChainId);
     } else {
       setBuyToken(token.symbol);
-      trackTokenSelected('buy', token.symbol, token.address, getCowChainId(chainId));
+      // Ensure sell token is set (default to USDC if not set or if same as buy token)
+      if (!sellToken || sellToken === token.symbol) {
+        setSellToken('USDC');
+      }
+      trackTokenSelected('buy', token.symbol, token.address, cowChainId);
     }
-  }, [chainId, getCowChainId]);
+  }, [chainId, getCowChainId, buyToken, sellToken]);
 
   // Expose handler via ref for parent access
   const tokenSelectHandlerRef = useRef(handleTokenSelect);
@@ -367,6 +377,13 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   const params: CowSwapWidgetParams = useMemo(() => {
     const cowChainId = isConnected ? getCowChainId(chainId) : 1;
     console.log('Creating widget params:', { sellToken, buyToken, chainId: cowChainId });
+    
+    // Construct absolute URL for images to ensure widget can access them
+    // Note: CowSwapWidgetImages interface only supports one property: "emptyOrders"
+    // This is the image displayed when the orders table is empty (no orders yet)
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const mobileLogoUrl = `${baseUrl}/mobilelogo.png`;
+    
     return {
       "appCode": "Vaulto Swap", // Name of your app (max 50 characters)
       "width": "100%", // Responsive width
@@ -394,43 +411,41 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
     "disableProgressBar": false,
     "hideBridgeInfo": false,
     "hideOrdersTable": false,
-    "images": {},
-    "sounds": {},
-    "partnerFee": { // 0.5% partner fee for all transactions
-      "bps": 50, // 0.5%
-      "recipient": "0x88902e56e83331379506A4313595f5B9075Ad3e0", // Fee destination address
+    "hideLogo": false,
+    "images": {
+      // Only available image parameter: displays when orders table is empty
+      "emptyOrders": mobileLogoUrl
     },
-    "customTokens": [
-      // Add some major tokens as custom tokens to ensure they're available
-      {
-        "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        "symbol": "USDC",
-        "name": "USD Coin",
-        "decimals": 6,
-        "chainId": 1
+    "sounds": {},
+      "partnerFee": { // 0.5% partner fee for all transactions
+        "bps": 50, // 0.5%
+        "recipient": "0x88902e56e83331379506A4313595f5B9075Ad3e0", // Fee destination address
       },
-      {
-        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "symbol": "USDT", 
-        "name": "Tether USD",
-        "decimals": 6,
-        "chainId": 1
-      },
-      {
-        "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-        "symbol": "DAI",
-        "name": "Dai Stablecoin", 
-        "decimals": 18,
-        "chainId": 1
-      },
-      {
-        "address": "0x2D1F7226Bd1F780AF6B9A49DCC0aE00E8Df4bDEE",
-        "symbol": "NVDAon",
-        "name": "NVDA Token",
-        "decimals": 18,
-        "chainId": 1
-      }
-    ],
+      "customTokens": [
+        // Add some major tokens as custom tokens to ensure they're available
+        {
+          "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "chainId": 1
+        },
+        // Add common stablecoins for better token support
+        {
+          "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "symbol": "USDT",
+          "name": "Tether USD",
+          "decimals": 6,
+          "chainId": 1
+        },
+        {
+          "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "symbol": "DAI",
+          "name": "Dai Stablecoin",
+          "decimals": 18,
+          "chainId": 1
+        }
+      ],
     // Custom theme colors to match Vaulto's gold palette
     "theme": {
       "baseTheme": "dark",

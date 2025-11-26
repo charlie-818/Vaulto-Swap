@@ -4,6 +4,10 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { getTokenLogoUrl } from '@/query-token-logo';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { formatTVL, formatFeeTier, truncateAddress } from '@/lib/utils/formatters';
+import { isChainSupported } from '@/lib/uniswap/subgraphs';
+import { chainConfig } from '@/config/chains';
+import type { LiquidityApiResponse, LiquidityTokenResult } from '@/app/components/search/types';
 
 interface Token {
   address: string;
@@ -12,6 +16,14 @@ interface Token {
   decimals: number;
   logoURI?: string;
   chainId: number;
+  tvlUSD?: number; // Optional TVL from Uniswap
+  pools?: Array<{
+    poolAddress: string;
+    feeTierBps: number;
+    tvlUSD: number;
+    token0: { symbol: string };
+    token1: { symbol: string };
+  }>; // Optional pool data from Uniswap
 }
 
 interface TokenSearchProps {
@@ -132,6 +144,126 @@ const saveLogoToCache = (key: string, logoUrl: string | null): void => {
   }
 };
 
+// Check if a string is a valid Ethereum address
+const isEthereumAddress = (text: string): boolean => {
+  return /^0x[a-fA-F0-9]{40}$/.test(text);
+};
+
+// Fetch Uniswap liquidity data for a search query
+const fetchUniswapLiquidity = async (
+  chainId: number,
+  query: string
+): Promise<LiquidityApiResponse> => {
+  try {
+    const response = await fetch('/api/uniswap/liquidity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ chainId, query }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const data: LiquidityApiResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching Uniswap liquidity:', error);
+    return {
+      chainId,
+      tokens: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch liquidity data',
+    };
+  }
+};
+
+// Convert liquidity token result to search token format
+const liquidityTokenToSearchResult = (
+  liquidityToken: LiquidityTokenResult,
+  chainId: number
+): Token => {
+  return {
+    address: liquidityToken.address,
+    symbol: liquidityToken.symbol,
+    name: liquidityToken.name,
+    decimals: liquidityToken.decimals,
+    chainId,
+    tvlUSD: liquidityToken.tvlUSD,
+    pools: liquidityToken.pools.map((pool) => ({
+      poolAddress: pool.poolAddress,
+      feeTierBps: pool.feeTierBps,
+      tvlUSD: pool.tvlUSD,
+      token0: { symbol: pool.token0.symbol },
+      token1: { symbol: pool.token1.symbol },
+    })),
+  };
+};
+
+// Get top pool trading pair (just the symbols)
+const getTopPoolPair = (token: Token): string | null => {
+  if (!token.pools || token.pools.length === 0) {
+    return null;
+  }
+
+  const topPool = token.pools[0]; // Pools are already sorted by TVL
+  if (!topPool) return null;
+  
+  return `${topPool.token0.symbol}/${topPool.token1.symbol}`;
+};
+
+// Get TVL to display (prefer pool TVL, fallback to token TVL)
+const getDisplayTVL = (token: Token): number | null => {
+  // If token has pools, use the top pool's TVL (as shown before)
+  if (token.pools && token.pools.length > 0 && token.pools[0].tvlUSD) {
+    return token.pools[0].tvlUSD;
+  }
+  // Fallback to token-level TVL
+  if (token.tvlUSD !== undefined && token.tvlUSD > 0) {
+    return token.tvlUSD;
+  }
+  return null;
+};
+
+// Get sort TVL value for comprehensive sorting (pool TVL preferred, then token TVL)
+const getSortTVL = (token: Token): number => {
+  // Prioritize pool TVL (top pool's TVL) for sorting
+  if (token.pools && token.pools.length > 0 && token.pools[0].tvlUSD) {
+    return token.pools[0].tvlUSD;
+  }
+  // Fallback to token-level TVL
+  if (token.tvlUSD !== undefined && token.tvlUSD > 0) {
+    return token.tvlUSD;
+  }
+  // Return 0 for tokens with no TVL (they will sort to the bottom)
+  return 0;
+};
+
+// Get top pool display text (without fee percentage) - for backward compatibility
+const getTopPoolText = (token: Token): string | null => {
+  if (!token.pools || token.pools.length === 0) {
+    return null;
+  }
+
+  const topPool = token.pools[0]; // Pools are already sorted by TVL
+  if (!topPool) return null;
+
+  const poolTVL = formatTVL(topPool.tvlUSD);
+  
+  return `${topPool.token0.symbol}/${topPool.token1.symbol} • ${poolTVL} TVL`;
+};
+
+// Get explorer URL for a token address
+const getExplorerUrl = (chainId: number, address: string): string | null => {
+  const config = chainConfig[chainId as keyof typeof chainConfig];
+  if (!config || !config.explorer) {
+    return null;
+  }
+  return `${config.explorer}/token/${address}`;
+};
+
 export default function TokenSearch({ chainId }: TokenSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -142,10 +274,12 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
   const [logoUrls, setLogoUrls] = useState<Map<string, string | null>>(new Map());
   const [fetchingLogos, setFetchingLogos] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [isLoadingUniswap, setIsLoadingUniswap] = useState(false);
   const logoUrlsRef = useRef<Map<string, string | null>>(new Map());
   const fetchingLogosRef = useRef<Set<string>>(new Set());
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const isMobile = useIsMobile();
   
   // Load cached logos from localStorage on mount
@@ -586,7 +720,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     };
 
     fetchTokens();
-  }, [chainId, processAndSetTokens]);
+  }, [chainId, processAndSetTokens, fetchTokenLogos, standardTokens, vaultoTokens]);
 
   // Default tokens to show when search is first opened
   const getDefaultTokens = useCallback((): Token[] => {
@@ -604,7 +738,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     return isMobile ? defaultTokens.slice(0, 4) : defaultTokens;
   }, [tokens, chainId, isMobile]);
 
-  // Filter tokens based on search query
+  // Filter tokens based on search query with Uniswap integration
   useEffect(() => {
     if (!searchQuery.trim()) {
       // Show default tokens when search is open but no query
@@ -613,32 +747,140 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
       } else {
         setFilteredTokens([]);
       }
+      setIsLoadingUniswap(false);
       return;
     }
 
-    const query = searchQuery.toLowerCase().trim();
-    console.log('TokenSearch: Filtering tokens', {
-      query,
-      totalTokens: tokens.length,
-      sampleTokens: tokens.slice(0, 5).map(t => ({ symbol: t.symbol, name: t.name }))
-    });
-    
-    const filtered = tokens.filter(token => {
-      const symbolMatch = token.symbol.toLowerCase().includes(query);
-      const nameMatch = token.name.toLowerCase().includes(query);
-      return symbolMatch || nameMatch;
-    });
+    const query = searchQuery.trim();
+    const queryLower = query.toLowerCase();
 
-    console.log('TokenSearch: Filtered results', {
-      query,
-      filteredCount: filtered.length,
-      results: filtered.slice(0, isMobile ? 4 : 10).map(t => ({ symbol: t.symbol, name: t.name }))
-    });
+    // Cancel previous request if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
-    // Limit to 4 results on mobile, 10 on desktop for performance
-    const maxResults = isMobile ? 4 : 10;
-    setFilteredTokens(filtered.slice(0, maxResults));
-  }, [searchQuery, tokens, isOpen, getDefaultTokens, isMobile]);
+    // Check if query is an Ethereum address
+    if (isEthereumAddress(query)) {
+      // Show address result (existing logic - can be enhanced later)
+      const addressToken = tokens.find(
+        (token) => token.address.toLowerCase() === queryLower
+      );
+      setFilteredTokens(addressToken ? [addressToken] : []);
+      setIsLoadingUniswap(false);
+      return;
+    }
+
+    // Debounce search with 400ms delay
+    const debounceTimer = setTimeout(async () => {
+      // Create new abort controller for this request
+      abortControllerRef.current = new AbortController();
+      const currentAbortController = abortControllerRef.current;
+
+      // Filter local tokens
+      const filteredLocal = tokens.filter((token) => {
+        const symbolMatch = token.symbol.toLowerCase().includes(queryLower);
+        const nameMatch = token.name.toLowerCase().includes(queryLower);
+        return symbolMatch || nameMatch;
+      });
+
+      // Create a map to deduplicate tokens by address
+      const tokenMap = new Map<string, Token>();
+      
+      // Add local tokens first
+      filteredLocal.forEach((token) => {
+        const key = `${token.chainId}-${token.address.toLowerCase()}`;
+        if (!tokenMap.has(key)) {
+          tokenMap.set(key, token);
+        }
+      });
+
+      // Fetch Uniswap liquidity if chain is supported
+      let uniswapTokens: Token[] = [];
+      if (isChainSupported(chainId)) {
+        setIsLoadingUniswap(true);
+        try {
+          // Check if request was aborted before making the fetch
+          if (currentAbortController.signal.aborted) {
+            return;
+          }
+
+          const liquidityData = await fetchUniswapLiquidity(chainId, query);
+          
+          // Check again after fetch completes
+          if (currentAbortController.signal.aborted) {
+            return;
+          }
+          
+          if (liquidityData.tokens && liquidityData.tokens.length > 0) {
+            uniswapTokens = liquidityData.tokens.map((liquidityToken) =>
+              liquidityTokenToSearchResult(liquidityToken, chainId)
+            );
+            
+            // Merge Uniswap tokens into map (they take precedence for TVL/pool data)
+            uniswapTokens.forEach((token) => {
+              const key = `${token.chainId}-${token.address.toLowerCase()}`;
+              const existing = tokenMap.get(key);
+              
+              if (existing) {
+                // Merge: keep local token data but add Uniswap TVL/pools
+                tokenMap.set(key, {
+                  ...existing,
+                  tvlUSD: token.tvlUSD,
+                  pools: token.pools,
+                });
+              } else {
+                // New token from Uniswap
+                tokenMap.set(key, token);
+              }
+            });
+          }
+        } catch (error) {
+          // Ignore abort errors
+          if (error instanceof Error && error.name === 'AbortError') {
+            return;
+          }
+          console.error('Error fetching Uniswap liquidity:', error);
+          // Continue with local tokens only
+        } finally {
+          // Only update loading state if this is still the current request
+          if (!currentAbortController.signal.aborted) {
+            setIsLoadingUniswap(false);
+          }
+        }
+      }
+
+      // Check if request was aborted before updating state
+      if (currentAbortController.signal.aborted) {
+        return;
+      }
+
+      // Convert map to array and sort by pool TVL (highest to lowest)
+      const allTokens = Array.from(tokenMap.values()).sort((a, b) => {
+        const aTVL = getSortTVL(a);
+        const bTVL = getSortTVL(b);
+        
+        // Sort by TVL descending (highest to lowest)
+        if (bTVL !== aTVL) {
+          return bTVL - aTVL;
+        }
+        
+        // If TVL is equal (including both 0), fallback to alphabetical by symbol
+        return a.symbol.localeCompare(b.symbol);
+      });
+
+      // Limit to 4 results on mobile, 10 on desktop for performance
+      const maxResults = isMobile ? 4 : 10;
+      setFilteredTokens(allTokens.slice(0, maxResults));
+    }, 400); // 400ms debounce
+
+    return () => {
+      clearTimeout(debounceTimer);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, [searchQuery, tokens, isOpen, getDefaultTokens, isMobile, chainId]);
 
   // Keyboard shortcut: "/" to open search
   useEffect(() => {
@@ -663,7 +905,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
         return;
       }
 
-      // Prevent default behavior (inserting "/" into input)
+      // Prevent default behavior
       event.preventDefault();
 
       // Focus the search input and open it
@@ -711,20 +953,42 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     }
   }, [isOpen]);
 
-  // Handle token selection - immediately set as buy token
+  // Handle token selection - set up trading pair
   const handleTokenClick = (token: Token) => {
     const handler = (window as any).__handleTokenSelect;
+    
+    // Prepare token object with all necessary information
+    const tokenForSwap: Token = {
+      address: token.address,
+      symbol: token.symbol,
+      name: token.name,
+      decimals: token.decimals,
+      logoURI: token.logoURI,
+      chainId: token.chainId,
+    };
+    
     if (handler && typeof handler === 'function') {
-      console.log('Calling token selection handler:', { symbol: token.symbol, type: 'buy' });
-      handler(token, 'buy');
+      console.log('Calling token selection handler:', { 
+        symbol: tokenForSwap.symbol, 
+        address: tokenForSwap.address,
+        chainId: tokenForSwap.chainId,
+        type: 'buy' 
+      });
+      handler(tokenForSwap, 'buy');
     } else {
       console.warn('Token selection handler not available. Widget may not be loaded yet.');
       // Retry after a short delay in case widget is still loading
       setTimeout(() => {
         const retryHandler = (window as any).__handleTokenSelect;
         if (retryHandler && typeof retryHandler === 'function') {
-          console.log('Retrying token selection handler:', { symbol: token.symbol, type: 'buy' });
-          retryHandler(token, 'buy');
+          console.log('Retrying token selection handler:', { 
+            symbol: tokenForSwap.symbol,
+            address: tokenForSwap.address,
+            type: 'buy' 
+          });
+          retryHandler(tokenForSwap, 'buy');
+        } else {
+          console.error('Token selection handler still not available after retry');
         }
       }, 500);
     }
@@ -740,7 +1004,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     }
   }, []);
 
-  const showResults = isOpen && (filteredTokens.length > 0 || !isLoading);
+  const showResults = isOpen && (filteredTokens.length > 0 || isLoading || isLoadingUniswap);
 
   return (
     <>
@@ -759,7 +1023,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
             onBlur={() => {
               setIsFocused(false);
             }}
-            className="w-full px-4 py-3 md:px-4 md:py-2 pl-10 md:pl-10 pr-10 md:pr-10 bg-gray-800/50 border border-gray-600/50 md:border-yellow-400/40 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-500 md:focus:border-yellow-300 focus:ring-1 focus:ring-gray-500 md:focus:ring-yellow-300 text-sm md:text-sm transition-all duration-200"
+            className="w-full px-4 py-3 md:px-4 md:py-3 pl-10 md:pl-10 pr-10 md:pr-10 bg-gray-800/50 border border-gray-600/50 md:border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-gray-500 md:focus:border-gray-500 focus:ring-1 focus:ring-gray-500 md:focus:ring-gray-500 text-sm md:text-base transition-all duration-200"
           />
           <svg
             className="absolute left-3 md:left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-4 md:h-4 text-gray-400"
@@ -787,7 +1051,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
         {/* Dropdown Results */}
         {showResults && (
           <div className="absolute top-full left-0 right-0 mt-1 border border-yellow-400/40 rounded-lg shadow-lg z-50 max-h-[60vh] md:max-h-64 overflow-y-auto token-dropdown-scrollbar" style={{ backgroundColor: '#1f2937' }}>
-            {isLoading ? (
+            {isLoading || isLoadingUniswap ? (
               <div className="p-4 text-center text-gray-400 text-sm">Loading tokens...</div>
             ) : filteredTokens.length > 0 ? (
               <ul className="py-2 px-2">
@@ -882,8 +1146,64 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white text-base md:text-sm font-medium">{token.symbol}</div>
-                        <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="text-white text-base md:text-sm font-medium">
+                            {token.symbol}
+                            {(() => {
+                              const poolPair = getTopPoolPair(token);
+                              if (poolPair) {
+                                return <span className="text-gray-400 font-normal"> ({poolPair})</span>;
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
+                          {(() => {
+                            const displayTVL = getDisplayTVL(token);
+                            if (displayTVL !== null && displayTVL > 0) {
+                              return (
+                                <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                  {formatTVL(displayTVL)}
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
+                          {(() => {
+                            const explorerUrl = getExplorerUrl(token.chainId, token.address);
+                            if (!explorerUrl) return null;
+                            return (
+                              <a
+                                href={explorerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                title="View on Explorer"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={2}
+                                  stroke="currentColor"
+                                  className="w-3 h-3"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                              </a>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </li>
                   );
