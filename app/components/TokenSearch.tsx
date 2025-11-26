@@ -434,6 +434,34 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     {"name":"Sony","symbol":"SONYon","address":"0xaf1382692f9927fd6a6c25add60285628a1879e5","chainId":1,"decimals":18}
   ], []);
 
+  // Helper function to normalize logoURI (handle relative URLs and IPFS URLs)
+  const normalizeLogoURI = useCallback((logoURI: string | undefined): string | undefined => {
+    if (!logoURI) return undefined;
+    
+    // Convert IPFS URLs to HTTPS gateway URLs
+    // Format: ipfs://QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg
+    // Convert to: https://ipfs.io/ipfs/QmXttGpZrECX5qCyXbBQiqgQNytVGeZW5Anewvh2jc4psg
+    if (logoURI.startsWith('ipfs://')) {
+      const ipfsHash = logoURI.replace('ipfs://', '');
+      // Use ipfs.io gateway (already configured in next.config.mjs)
+      return `https://ipfs.io/ipfs/${ipfsHash}`;
+    }
+    
+    // If it's already an absolute URL (starts with http:// or https://), return as-is
+    // This handles URLs from coin-images.coingecko.com and other external sources
+    if (logoURI.startsWith('http://') || logoURI.startsWith('https://')) {
+      return logoURI;
+    }
+    
+    // If it's a relative URL starting with /, resolve it relative to the current origin
+    if (logoURI.startsWith('/')) {
+      return typeof window !== 'undefined' ? `${window.location.origin}${logoURI}` : logoURI;
+    }
+    
+    // For other relative URLs, return as-is (they might be handled elsewhere)
+    return logoURI;
+  }, []);
+
   // Fetch logo URLs for tokens that don't have logoURI
   const fetchTokenLogos = useCallback(async (tokensToFetch: Token[]) => {
     const tokensNeedingLogos = tokensToFetch.filter(
@@ -454,10 +482,12 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
           // Check localStorage cache first
           const cachedLogo = loadLogoCache().get(key);
           if (cachedLogo !== undefined) {
+            // Normalize cached logo URL (convert IPFS URLs to HTTPS gateway URLs)
+            const normalizedCachedLogo = normalizeLogoURI(cachedLogo || undefined) || cachedLogo;
             // Found in cache, use it
             setLogoUrls(prev => {
               const newMap = new Map(prev);
-              newMap.set(key, cachedLogo);
+              newMap.set(key, normalizedCachedLogo);
               logoUrlsRef.current = newMap;
               return newMap;
             });
@@ -481,13 +511,16 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
             const graphQLChain = getGraphQLChainName(token.chainId);
             const result = await getTokenLogoUrl(token.address, graphQLChain);
             
+            // Normalize the logo URL (convert IPFS URLs to HTTPS gateway URLs)
+            const normalizedLogoUrl = normalizeLogoURI(result.logoUrl || undefined) || null;
+            
             // Save to localStorage cache
-            saveLogoToCache(key, result.logoUrl);
+            saveLogoToCache(key, normalizedLogoUrl);
             
             // Update logo URLs map
             setLogoUrls(prev => {
               const newMap = new Map(prev);
-              newMap.set(key, result.logoUrl);
+              newMap.set(key, normalizedLogoUrl);
               logoUrlsRef.current = newMap;
               return newMap;
             });
@@ -521,7 +554,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
-  }, []);
+  }, [normalizeLogoURI]);
 
   // Standard tokens (USDC, USDT, DAI, etc.)
   const standardTokens: Token[] = useMemo(() => [
@@ -550,25 +583,6 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
       logoURI: "/dai.png",
     },
   ], []);
-
-  // Helper function to normalize logoURI (handle relative URLs)
-  const normalizeLogoURI = useCallback((logoURI: string | undefined): string | undefined => {
-    if (!logoURI) return undefined;
-    
-    // If it's already an absolute URL (starts with http:// or https://), return as-is
-    // This handles URLs from coin-images.coingecko.com and other external sources
-    if (logoURI.startsWith('http://') || logoURI.startsWith('https://')) {
-      return logoURI;
-    }
-    
-    // If it's a relative URL starting with /, resolve it relative to the current origin
-    if (logoURI.startsWith('/')) {
-      return typeof window !== 'undefined' ? `${window.location.origin}${logoURI}` : logoURI;
-    }
-    
-    // For other relative URLs, return as-is (they might be handled elsewhere)
-    return logoURI;
-  }, []);
 
   // Helper function to process and set tokens
   const processAndSetTokens = useCallback((apiTokens: Token[]) => {
