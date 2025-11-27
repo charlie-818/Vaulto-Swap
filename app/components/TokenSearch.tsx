@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { getTokenLogoUrl } from '@/query-token-logo';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { formatTVL, formatFeeTier, truncateAddress } from '@/lib/utils/formatters';
@@ -266,6 +267,7 @@ const getExplorerUrl = (chainId: number, address: string): string | null => {
 };
 
 export default function TokenSearch({ chainId }: TokenSearchProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [tokens, setTokens] = useState<Token[]>([]);
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
@@ -1117,8 +1119,17 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     }
   }, [isOpen]);
 
-  // Handle token selection - set up trading pair
-  const handleTokenClick = (token: Token) => {
+  // Handle token selection - set up trading pair and navigate to details
+  const handleTokenClick = (token: Token, navigateToDetails: boolean = false) => {
+    // If user wants to navigate to details (via View Details button), do that
+    if (navigateToDetails) {
+      router.push(`/token/${token.chainId}/${token.address}`);
+      setIsOpen(false);
+      setSearchQuery('');
+      return;
+    }
+
+    // Otherwise, set up trading pair for swap widget
     const handler = (window as any).__handleTokenSelect;
     
     // Prepare token object with all necessary information
@@ -1269,7 +1280,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                     <li
                       key={`${token.chainId}-${token.address}`}
                       onClick={() => handleTokenClick(token)}
-                      className="px-3 py-3 md:px-2 md:py-2 hover:bg-gray-600/50 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-4 md:gap-3"
+                      className="px-3 py-3 md:px-2 md:py-2 hover:bg-gray-600/50 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-4 md:gap-3 relative"
                     >
                       <div className="relative w-8 h-8 md:w-6 md:h-6 flex-shrink-0">
                         {!showFallback && displayLogoUrl ? (
@@ -1315,7 +1326,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 pr-20">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="text-white text-base md:text-sm font-medium">
                             {token.symbol}
@@ -1335,7 +1346,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                             if (displayTVL !== null && displayTVL > 0) {
                               return (
                                 <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
-                                  {formatTVL(displayTVL)}
+                                  {formatTVL(displayTVL)} TVL
                                 </span>
                               );
                             }
@@ -1379,36 +1390,64 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                             </button>
                             {(() => {
                               const explorerUrl = getExplorerUrl(token.chainId, token.address);
-                              if (!explorerUrl) return null;
                               return (
-                                <a
-                                  href={explorerUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
-                                  title="View on Explorer"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                    className="w-3 h-3"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                </a>
+                                <>
+                                  {explorerUrl && (
+                                    <a
+                                      href={explorerUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                      title="View on Explorer"
+                                    >
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                        className="w-3 h-3"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                      </svg>
+                                    </a>
+                                  )}
+                                </>
                               );
                             })()}
                           </div>
                         </div>
                       </div>
+                      {/* Learn More button - positioned at bottom right */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTokenClick(token, true);
+                        }}
+                        className="absolute bottom-2 right-0 px-2 py-1 text-xs font-medium text-yellow-400 hover:text-yellow-300 rounded transition-colors flex items-center gap-1"
+                        title="Learn More"
+                      >
+                        Learn More
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          stroke="currentColor"
+                          className="w-3 h-3"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
                     </li>
                   );
                 })}

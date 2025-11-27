@@ -88,3 +88,24 @@ export function formatFeeTier(feeTierBps: number): string {
   return `${percentage.toFixed(2)}%`;
 }
 
+/**
+ * Format currency value with $ prefix
+ * Example: formatCurrency(1500000) returns "$1,500,000.00"
+ * Example: formatCurrency(0.1234) returns "$0.12"
+ */
+export function formatCurrency(value: number, decimals: number = 2): string {
+  if (isNaN(value) || value < 0) {
+    return "$0.00";
+  }
+  
+  // For very small values, show more decimals
+  if (value > 0 && value < 0.01) {
+    return `$${value.toFixed(6)}`;
+  }
+  
+  return `$${value.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`;
+}
+

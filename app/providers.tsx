@@ -47,11 +47,10 @@ const rainbowKitConnectors = connectorsForWallets(
 );
 
 // Configure wagmi
-const config = createConfig({
-  chains,
-  connectors: [
-    ...rainbowKitConnectors,
-    // Keep WalletConnect connector for Web3Modal (desktop)
+const connectors = [...rainbowKitConnectors];
+// Only add WalletConnect connector if project ID is provided
+if (projectId) {
+  connectors.push(
     walletConnect({ 
       projectId,
       metadata: {
@@ -61,8 +60,13 @@ const config = createConfig({
         icons: [typeof window !== 'undefined' ? `${window.location.origin}/favicon.png` : "https://swap.vaulto.ai/favicon.png"],
       },
       showQrModal: false,
-    }),
-  ],
+    })
+  );
+}
+
+const config = createConfig({
+  chains,
+  connectors,
   transports: {
     [mainnet.id]: http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL || "https://eth.llamarpc.com"),
     [arbitrum.id]: http(process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc"),
