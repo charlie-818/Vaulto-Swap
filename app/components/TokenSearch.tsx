@@ -1168,7 +1168,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     }
   }, []);
 
-  const showResults = isOpen && (filteredTokens.length > 0 || isLoading || isLoadingUniswap);
+  const showResults = isOpen;
 
   return (
     <>
@@ -1269,7 +1269,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                     <li
                       key={`${token.chainId}-${token.address}`}
                       onClick={() => handleTokenClick(token)}
-                      className="px-3 py-3 md:px-2 md:py-2 hover:bg-gray-600/50 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-4 md:gap-3"
+                      className="px-3 py-3 md:px-2 md:py-2 hover:bg-gray-600/50 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-3 md:gap-3"
                     >
                       <div className="relative w-8 h-8 md:w-6 md:h-6 flex-shrink-0">
                         {!showFallback && displayLogoUrl ? (
@@ -1316,7 +1316,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1.5 md:mb-1">
                           <div className="text-white text-base md:text-sm font-medium">
                             {token.symbol}
                             {(() => {
@@ -1328,23 +1328,26 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                             })()}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1.5 md:mb-1">
                           <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
                           {(() => {
                             const displayTVL = getDisplayTVL(token);
                             if (displayTVL !== null && displayTVL > 0) {
                               return (
-                                <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
-                                  {formatTVL(displayTVL)}
-                                </span>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-400/20 text-yellow-400 rounded">
+                                    {formatTVL(displayTVL)}
+                                  </span>
+                                  <span className="text-white text-[10px] font-medium">TVL</span>
+                                </div>
                               );
                             }
                             return null;
                           })()}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 md:gap-2">
                           <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5 md:gap-1">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
