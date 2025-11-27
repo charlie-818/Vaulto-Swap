@@ -308,23 +308,37 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
 
   // Debug token list configuration
   useEffect(() => {
-    const tokenListUrl = "https://vaulto.dev/api/token-list/";
+    const tokenLists = [
+      "https://vaulto.dev/api/token-list/",
+      "https://ipfs.io/ipns/tokens.uniswap.org"
+    ];
     console.log('CowSwap Widget - Token List Configuration:', {
-      tokenListUrl,
+      tokenLists,
       chainId: isConnected ? getCowChainId(chainId) : 1,
       isConnected
     });
     
-    // Test if token list is accessible
+    // Test if both token lists are accessible
     if (typeof window !== 'undefined') {
-      fetch(tokenListUrl)
-        .then(response => response.json())
-        .then(data => {
-          console.log('CowSwap Widget - Token List Loaded:', data);
-        })
-        .catch(error => {
-          console.error('CowSwap Widget - Token List Error:', error);
-        });
+      tokenLists.forEach((url, index) => {
+        fetch(url)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log(`CowSwap Widget - Token List ${index + 1} Loaded (${url}):`, {
+              name: data.name,
+              tokenCount: data.tokens?.length || 0,
+              version: data.version
+            });
+          })
+          .catch(error => {
+            console.error(`CowSwap Widget - Token List ${index + 1} Error (${url}):`, error);
+          });
+      });
     }
   }, [chainId, isConnected, getCowChainId]);
 
@@ -389,8 +403,9 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
       "width": "100%", // Responsive width
       "height": "500px", // Optimized height for better mobile compatibility
       "chainId": cowChainId, // Dynamic chain based on user's connected chain
-      "tokenLists": [ // Custom Vaulto token list
-        "https://vaulto.dev/api/token-list/"
+      "tokenLists": [ // All default enabled token lists. Also see https://tokenlists.org
+        "https://vaulto.dev/api/token-list/",
+        "https://ipfs.io/ipns/tokens.uniswap.org"
       ],
       "tradeType": TradeType.SWAP, // Default to SWAP
       "sell": { // Sell token from search selection
