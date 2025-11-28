@@ -416,7 +416,7 @@ export default function Home() {
                 <ul className="flex items-center gap-4">
                   <li>
                     <a 
-                      href="https://vaulto.ai" 
+                      href="https://search.vaulto.ai" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-sm text-gray-400 hover:text-white transition-colors"
