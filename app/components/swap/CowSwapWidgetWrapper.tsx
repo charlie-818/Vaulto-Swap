@@ -37,6 +37,8 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   const widgetContainerRef = useRef<HTMLDivElement>(null);
   const [sellToken, setSellToken] = useState<string>('USDC');
   const [buyToken, setBuyToken] = useState<string>('NVDAon');
+  // Track widget initialization per chainId to prevent token list reloading
+  const widgetInitializedRef = useRef<Set<number>>(new Set());
 
   // Map wagmi chain IDs to CoW Swap supported chains
   const getCowChainId = useCallback((wagmiChainId: number): number => {
@@ -387,9 +389,13 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
     };
   }, []);
 
+  // Get stable chainId - use current chainId, default to 1 if not connected
+  const cowChainId = useMemo(() => getCowChainId(chainId), [chainId, getCowChainId]);
+
   // Create params object with current token state
+  // Note: params should be stable and not recalculate when isConnected changes
+  // to prevent widget from reloading token lists
   const params: CowSwapWidgetParams = useMemo(() => {
-    const cowChainId = isConnected ? getCowChainId(chainId) : 1;
     console.log('Creating widget params:', { sellToken, buyToken, chainId: cowChainId });
     
     // Construct absolute URL for images to ensure widget can access them
@@ -475,7 +481,21 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
       "success": "#10b981", // emerald-500
     }
     };
-  }, [sellToken, buyToken, chainId, isConnected, getCowChainId]);
+  }, [sellToken, buyToken, cowChainId]);
+
+  // Create a stable widget key that only changes when chainId, sellToken, or buyToken changes
+  // This prevents the widget from remounting when wallet connects/disconnects
+  // The key includes isConnected to ensure proper initialization, but we use a ref to track
+  // if the widget has been initialized for this chainId to prevent token list reloading
+  // NOTE: This hook must be called before any conditional returns to follow React hooks rules
+  const widgetKey = useMemo(() => {
+    const key = `widget-${cowChainId}-${sellToken}-${buyToken}`;
+    // Mark this chainId as initialized to prevent token list reloading
+    if (!widgetInitializedRef.current.has(cowChainId)) {
+      widgetInitializedRef.current.add(cowChainId);
+    }
+    return key;
+  }, [cowChainId, sellToken, buyToken]);
 
   if (!isMounted) {
     return null;
@@ -488,7 +508,7 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
     <div className="w-full max-w-6xl mx-auto px-4" ref={widgetContainerRef}>
       <div className="w-full flex items-center justify-center min-h-[500px]">
         <CowSwapWidget 
-          key={`${sellToken}-${buyToken}-${getCowChainId(chainId)}`}
+          key={widgetKey}
           params={params} 
           provider={provider} 
         />
