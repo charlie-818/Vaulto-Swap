@@ -17,6 +17,9 @@ interface GraphQLToken {
   decimals: number;
   volumeUSD: string;
   totalValueLockedUSD: string;
+  tokenDayData: Array<{
+    volumeUSD: string;
+  }>;
 }
 
 /**
@@ -63,6 +66,13 @@ const TOKEN_SEARCH_QUERY = `
       decimals
       volumeUSD
       totalValueLockedUSD
+      tokenDayData(
+        orderBy: date
+        orderDirection: desc
+        first: 1
+      ) {
+        volumeUSD
+      }
     }
   }
 `;
@@ -106,14 +116,22 @@ export async function searchTokens(
       }
     );
 
-    const tokens = (response.tokens || []).map((token) => ({
-      address: token.id.toLowerCase(), // Ensure lowercase
-      symbol: token.symbol || '',
-      name: token.name || '',
-      decimals: token.decimals || 18,
-      tvlUSD: parseFloat(token.totalValueLockedUSD || '0'),
-      volumeUSD: parseFloat(token.volumeUSD || '0'),
-    }));
+    const tokens = (response.tokens || []).map((token) => {
+      // Get 24h volume from most recent tokenDayData, fallback to 0
+      const dayData = token.tokenDayData && token.tokenDayData.length > 0 
+        ? token.tokenDayData[0] 
+        : null;
+      const volume24h = dayData ? parseFloat(dayData.volumeUSD || '0') : 0;
+      
+      return {
+        address: token.id.toLowerCase(), // Ensure lowercase
+        symbol: token.symbol || '',
+        name: token.name || '',
+        decimals: token.decimals || 18,
+        tvlUSD: parseFloat(token.totalValueLockedUSD || '0'),
+        volumeUSD: volume24h, // Use 24h volume instead of lifetime volume
+      };
+    });
 
     return {
       chainId: chainId as VaultoChainId,

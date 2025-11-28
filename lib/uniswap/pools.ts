@@ -30,6 +30,9 @@ interface GraphQLPool {
   volumeUSD: string;
   token0: GraphQLPoolToken;
   token1: GraphQLPoolToken;
+  poolDayData: Array<{
+    volumeUSD: string;
+  }>;
 }
 
 /**
@@ -109,6 +112,13 @@ const POOLS_FOR_TOKEN_QUERY = `
         name
         decimals
       }
+      poolDayData(
+        orderBy: date
+        orderDirection: desc
+        first: 1
+      ) {
+        volumeUSD
+      }
     }
   }
 `;
@@ -160,6 +170,12 @@ export async function getPoolsForToken(
       // Fee tier is already in basis points (e.g., "500" = 0.05%)
       const feeTierBps = parseInt(pool.feeTier || '0', 10);
       
+      // Get 24h volume from most recent poolDayData, fallback to 0
+      const dayData = pool.poolDayData && pool.poolDayData.length > 0 
+        ? pool.poolDayData[0] 
+        : null;
+      const volume24h = dayData ? parseFloat(dayData.volumeUSD || '0') : 0;
+      
       return {
         poolAddress: pool.id.toLowerCase(), // Ensure lowercase
         chainId: chainId as VaultoChainId,
@@ -168,7 +184,7 @@ export async function getPoolsForToken(
         sqrtPrice: pool.sqrtPrice || '0',
         tick: pool.tick ? parseInt(pool.tick, 10) : null,
         tvlUSD: parseFloat(pool.totalValueLockedUSD || '0'),
-        volumeUSD: parseFloat(pool.volumeUSD || '0'),
+        volumeUSD: volume24h, // Use 24h volume instead of lifetime volume
         token0: {
           address: pool.token0.id.toLowerCase(), // Ensure lowercase
           symbol: pool.token0.symbol || '',

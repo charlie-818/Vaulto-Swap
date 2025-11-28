@@ -18,10 +18,12 @@ interface Token {
   logoURI?: string;
   chainId: number;
   tvlUSD?: number; // Optional TVL from Uniswap
+  volumeUSD?: number; // Optional 24hr volume from Uniswap
   pools?: Array<{
     poolAddress: string;
     feeTierBps: number;
     tvlUSD: number;
+    volumeUSD: number;
     token0: { symbol: string };
     token1: { symbol: string };
   }>; // Optional pool data from Uniswap
@@ -193,10 +195,12 @@ const liquidityTokenToSearchResult = (
     decimals: liquidityToken.decimals,
     chainId,
     tvlUSD: liquidityToken.tvlUSD,
+    volumeUSD: liquidityToken.volumeUSD,
     pools: liquidityToken.pools.map((pool) => ({
       poolAddress: pool.poolAddress,
       feeTierBps: pool.feeTierBps,
       tvlUSD: pool.tvlUSD,
+      volumeUSD: pool.volumeUSD,
       token0: { symbol: pool.token0.symbol },
       token1: { symbol: pool.token1.symbol },
     })),
@@ -224,6 +228,22 @@ const getDisplayTVL = (token: Token): number | null => {
   // Fallback to token-level TVL
   if (token.tvlUSD !== undefined && token.tvlUSD > 0) {
     return token.tvlUSD;
+  }
+  return null;
+};
+
+// Get 24hr volume to display (prefer pool volume sum, fallback to token volume)
+const getDisplayVolume = (token: Token): number | null => {
+  // If token has pools, sum up all pool volumes
+  if (token.pools && token.pools.length > 0) {
+    const totalPoolVolume = token.pools.reduce((sum, pool) => sum + (pool.volumeUSD || 0), 0);
+    if (totalPoolVolume > 0) {
+      return totalPoolVolume;
+    }
+  }
+  // Fallback to token-level volume
+  if (token.volumeUSD !== undefined && token.volumeUSD > 0) {
+    return token.volumeUSD;
   }
   return null;
 };
@@ -826,10 +846,11 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
               const existing = tokenMap.get(key);
               
               if (existing) {
-                // Merge: keep local token data but add Uniswap TVL/pools
+                // Merge: keep local token data but add Uniswap TVL/volume/pools
                 tokenMap.set(key, {
                   ...existing,
                   tvlUSD: uniswapToken.tvlUSD,
+                  volumeUSD: uniswapToken.volumeUSD,
                   pools: uniswapToken.pools,
                 });
               }
@@ -975,10 +996,11 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
               const existing = tokenMap.get(key);
               
               if (existing) {
-                // Merge: keep local token data but add Uniswap TVL/pools
+                // Merge: keep local token data but add Uniswap TVL/volume/pools
                 tokenMap.set(key, {
                   ...existing,
                   tvlUSD: token.tvlUSD,
+                  volumeUSD: token.volumeUSD,
                   pools: token.pools,
                 });
               } else {
@@ -1316,7 +1338,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5 md:mb-1">
+                        <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
                           <div className="text-white text-base md:text-sm font-medium">
                             {token.symbol}
                             {(() => {
@@ -1327,19 +1349,31 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                               return null;
                             })()}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2 mb-1.5 md:mb-1">
-                          <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
                           {(() => {
                             const displayTVL = getDisplayTVL(token);
-                            if (displayTVL !== null && displayTVL > 0) {
+                            const hasTVL = displayTVL !== null && displayTVL > 0;
+                            
+                            if (hasTVL) {
                               return (
-                                <div className="flex items-center gap-1 flex-shrink-0">
-                                  <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-400/20 text-yellow-400 rounded">
-                                    {formatTVL(displayTVL)}
-                                  </span>
-                                  <span className="text-white text-[10px] font-medium">TVL</span>
-                                </div>
+                                <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                  {formatTVL(displayTVL)} <span className="text-[9px] text-white">TVL</span>
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
+                          <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
+                          {(() => {
+                            const displayVolume = getDisplayVolume(token);
+                            const hasVolume = displayVolume !== null && displayVolume > 0;
+                            
+                            if (hasVolume) {
+                              return (
+                                <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                  {formatTVL(displayVolume)} <span className="text-[9px] text-white">24h</span>
+                                </span>
                               );
                             }
                             return null;
