@@ -57,7 +57,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ['@cowprotocol/widget-react', 'wagmi', '@web3modal/wagmi'],
+    optimizePackageImports: ['@cowprotocol/widget-react', 'wagmi'],
   },
   webpack: (config, { isServer, webpack }) => {
     config.resolve.fallback = { 

@@ -3,11 +3,9 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAccount, useDisconnect, useChainId } from "wagmi";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useRef, useState } from "react";
 import { trackWalletConnectClick, trackWalletConnected, trackWalletDisconnected } from "@/lib/utils/analytics";
-import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import TokenSearch from "./components/TokenSearch";
 
 // Dynamically import the CoW widget to prevent SSR issues
@@ -18,12 +16,10 @@ const CowSwapWidgetWrapper = dynamic(
   }
 );
 
-// Desktop wallet button component (uses Web3Modal)
-// This component should only render after Web3Modal is initialized
-function DesktopWalletButton() {
-  const { open } = useWeb3Modal();
+
+// Wallet button component (uses RainbowKit)
+function WalletButton() {
   const { address, isConnected, connector } = useAccount();
-  const { disconnect } = useDisconnect();
   const chainId = useChainId();
   const wasConnectedRef = useRef(false);
 
@@ -42,314 +38,82 @@ function DesktopWalletButton() {
     }
   }, [isConnected, address, chainId, connector]);
 
-  const handleConnectClick = () => {
-    trackWalletConnectClick();
-    open();
-  };
+  const { disconnect } = useDisconnect();
 
   const handleDisconnect = () => {
     disconnect();
   };
 
-  if (!isConnected) {
-    return (
-      <button
-        onClick={handleConnectClick}
-        className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2"
-        title="Connect Wallet"
-        aria-label="Connect Wallet"
-      >
-        <svg
-          className="w-5 h-5 md:w-5 md:h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
-        <span className="hidden md:inline text-sm">Connect</span>
-      </button>
-    );
-  }
-
-  // When connected, show only disconnect icon
-  return (
-    <button
-      onClick={handleDisconnect}
-      className="px-2 py-1 md:px-3 md:py-2 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 flex items-center justify-center group"
-      title="Disconnect Wallet"
-      aria-label="Disconnect Wallet"
-    >
-      <svg 
-        className="w-5 h-5 md:w-6 md:h-6 text-red-400 group-hover:text-red-300 transition-colors duration-200" 
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={2} 
-          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
-        />
-      </svg>
-    </button>
-  );
-}
-
-// Mobile wallet button component (uses RainbowKit)
-function MobileWalletButton() {
-  const { address, isConnected, connector } = useAccount();
-  const chainId = useChainId();
-  const wasConnectedRef = useRef(false);
-  const connectButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Track wallet connection
-  useEffect(() => {
-    if (isConnected && address && !wasConnectedRef.current) {
-      trackWalletConnected(
-        address,
-        chainId,
-        connector?.name || 'unknown'
-      );
-      wasConnectedRef.current = true;
-    } else if (!isConnected && wasConnectedRef.current) {
-      trackWalletDisconnected();
-      wasConnectedRef.current = false;
-    }
-  }, [isConnected, address, chainId, connector]);
-
-  const { disconnect } = useDisconnect();
-
-  const handleMobileDisconnect = () => {
-    disconnect();
-  };
-
-  const handleMobileConnect = () => {
-    trackWalletConnectClick();
-    // Programmatically click the hidden ConnectButton to open RainbowKit modal
-    const connectButton = document.querySelector('[data-testid="rk-connect-button"]') as HTMLButtonElement;
-    if (connectButton) {
-      connectButton.click();
-    }
-  };
-
-  // When connected, show only disconnect icon
+  // When connected, show disconnect button
   if (isConnected) {
     return (
-      <div className="flex items-center justify-center" style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleMobileDisconnect();
-          }}
-          onMouseDown={(e) => e.stopPropagation()}
-          className="p-0 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 active:bg-red-500/30 active:border-red-500/60 transition-all duration-200 flex items-center justify-center group w-[44px] h-[44px] min-w-[44px] min-h-[44px] touch-manipulation"
-          style={{ 
-            width: '44px', 
-            height: '44px',
-            minWidth: '44px',
-            minHeight: '44px',
-            padding: 0,
-            margin: 0,
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            pointerEvents: 'auto',
-            cursor: 'pointer',
-            outline: 'none'
-          }}
-          title="Disconnect Wallet"
-          aria-label="Disconnect Wallet"
+      <button
+        onClick={handleDisconnect}
+        className="px-2 py-1 md:px-3 md:py-2 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 flex items-center justify-center group"
+        title="Disconnect Wallet"
+        aria-label="Disconnect Wallet"
+      >
+        <svg 
+          className="w-5 h-5 md:w-6 md:h-6 text-red-400 group-hover:text-red-300 transition-colors duration-200" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
         >
-          <svg 
-            className="w-5 h-5 text-red-400 group-hover:text-red-300 transition-colors duration-200" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-            style={{ pointerEvents: 'none', userSelect: 'none' }}
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
-            />
-          </svg>
-        </button>
-      </div>
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+          />
+        </svg>
+      </button>
     );
   }
 
-  // When not connected, use ConnectButton.Custom to render only wallet icon
+  // When not connected, use ConnectButton.Custom with responsive styling
   return (
-    <div className="flex items-center justify-center" style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}>
-      <ConnectButton.Custom>
-        {({ account, chain, openConnectModal, mounted }) => {
-          const ready = mounted;
-          const connected = ready && account && chain;
+    <ConnectButton.Custom>
+      {({ account, chain, openConnectModal, mounted }) => {
+        const ready = mounted;
+        const connected = ready && account && chain;
 
-          if (connected) {
-            return null; // This shouldn't happen as we check isConnected above, but just in case
-          }
+        if (connected) {
+          return null; // This shouldn't happen as we check isConnected above, but just in case
+        }
 
-          return (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                trackWalletConnectClick();
-                openConnectModal();
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="p-0 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 active:from-yellow-200 active:to-yellow-300 text-black rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center w-[44px] h-[44px] min-w-[44px] min-h-[44px] touch-manipulation"
-              style={{ 
-                width: '44px', 
-                height: '44px',
-                minWidth: '44px',
-                minHeight: '44px',
-                padding: 0,
-                margin: 0,
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                pointerEvents: 'auto',
-                cursor: 'pointer',
-                border: 'none',
-                outline: 'none'
-              }}
-              title="Connect Wallet"
-              aria-label="Connect Wallet"
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              trackWalletConnectClick();
+              openConnectModal();
+            }}
+            className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2"
+            title="Connect Wallet"
+            aria-label="Connect Wallet"
+          >
+            <svg
+              className="w-5 h-5 md:w-5 md:h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ pointerEvents: 'none', userSelect: 'none' }}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-            </button>
-          );
-        }}
-      </ConnectButton.Custom>
-    </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <span className="hidden md:inline text-sm">Connect</span>
+          </button>
+        );
+      }}
+    </ConnectButton.Custom>
   );
 }
 
-// Desktop wallet wrapper that ensures Web3Modal is ready
-function DesktopWalletWrapper() {
-  const [ready, setReady] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    // Check if Web3Modal is available
-    const checkWeb3Modal = () => {
-      try {
-        // Try to access Web3Modal - if it throws, it's not ready
-        if (typeof window !== "undefined") {
-          // Give Web3Modal time to initialize after mount
-          const timer = setTimeout(() => {
-            setReady(true);
-          }, 150);
-          return () => clearTimeout(timer);
-        }
-      } catch (error) {
-        // Web3Modal not ready yet
-        console.warn("Web3Modal not ready:", error);
-      }
-    };
-    
-    const cleanup = checkWeb3Modal();
-    return cleanup;
-  }, []);
-
-  // During SSR, render a placeholder that matches the initial client render
-  if (!mounted || !ready) {
-    return (
-      <button
-        className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2"
-        disabled
-        suppressHydrationWarning
-        title="Connect Wallet"
-        aria-label="Connect Wallet"
-      >
-        <svg
-          className="w-5 h-5 md:w-5 md:h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
-        <span className="hidden md:inline text-sm">Connect</span>
-      </button>
-    );
-  }
-
-  return <DesktopWalletButton />;
-}
-
-// Custom wallet component with address and disconnect button
-function WalletButton() {
-  const isMobile = useIsMobile();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Show nothing during SSR
-  if (!mounted) {
-    return (
-      <button
-        className="px-2 py-1 md:px-3 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center"
-        disabled
-        title="Connect Wallet"
-        aria-label="Connect Wallet"
-      >
-        <svg
-          className="w-5 h-5 md:w-6 md:h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
-      </button>
-    );
-  }
-
-  // Render mobile or desktop version
-  if (isMobile) {
-    return <MobileWalletButton />;
-  }
-
-  return <DesktopWalletWrapper />;
-}
 
 export default function Home() {
   const chainId = useChainId();
