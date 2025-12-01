@@ -3,7 +3,7 @@
 import { CowSwapWidget } from '@cowprotocol/widget-react';
 import type { CowSwapWidgetParams } from '@cowprotocol/widget-lib';
 import { TradeType } from '@cowprotocol/widget-lib';
-import { useChainId, useAccount } from 'wagmi';
+import { useChainId, useAccount, useConnectorClient } from 'wagmi';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   trackSwapWidgetLoaded,
@@ -14,6 +14,7 @@ import {
   trackSwapFailed,
   trackChainChanged,
 } from '@/lib/utils/analytics';
+import { getCowSwapTokenLists } from '@/lib/utils/tokenListValidation';
 
 interface Token {
   address: string;
@@ -30,7 +31,8 @@ interface CowSwapWidgetWrapperProps {
 
 export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWrapperProps = {}) {
   const chainId = useChainId();
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, connector } = useAccount();
+  const { data: connectorClient } = useConnectorClient();
   const [isMounted, setIsMounted] = useState(false);
   const prevChainIdRef = useRef<number | null>(null);
   const widgetLoadedRef = useRef(false);
@@ -39,6 +41,12 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   const [buyToken, setBuyToken] = useState<string>('NVDAon');
   // Track widget initialization per chainId to prevent token list reloading
   const widgetInitializedRef = useRef<Set<number>>(new Set());
+  // Validated token list URLs - starts with defaults, updated after validation
+  const [validatedTokenLists, setValidatedTokenLists] = useState<string[]>([
+    'https://vaulto.dev/api/token-list/',
+    'https://ipfs.io/ipns/tokens.uniswap.org',
+  ]);
+  const [isValidatingTokenLists, setIsValidatingTokenLists] = useState(true);
 
   // Map wagmi chain IDs to CoW Swap supported chains
   const getCowChainId = useCallback((wagmiChainId: number): number => {
@@ -64,8 +72,52 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
     }
   }, []);
 
-  // Get the provider - CowSwap widget needs EIP-1193 provider (window.ethereum)
-  const provider = isMounted && isConnected && typeof window !== 'undefined' ? window.ethereum : null;
+  // Get the provider - CowSwap widget needs EIP-1193 provider
+  // Use connector provider first (works with RainbowKit/wagmi), fallback to window.ethereum
+  const provider = useMemo(() => {
+    if (!isMounted || !isConnected) {
+      return null;
+    }
+
+    // Try to get provider from connector (works with RainbowKit/wagmi connectors)
+    if (connector) {
+      try {
+        // For injected connectors, try to get provider from connector
+        // Different connector types expose provider differently
+        const connectorProvider = 
+          (connector as any)?.provider || 
+          (connector as any)?._provider || 
+          (connectorClient as any)?.provider ||
+          (connectorClient as any)?.connector?.provider;
+        
+        if (connectorProvider) {
+          console.log('CowSwap Widget - Using provider from connector:', {
+            connectorType: connector.name || 'unknown',
+            connectorId: connector.id,
+            hasProvider: !!connectorProvider,
+          });
+          return connectorProvider;
+        }
+      } catch (error) {
+        console.warn('CowSwap Widget - Error accessing connector provider:', error);
+      }
+    }
+
+    // Fallback to window.ethereum for injected wallets (MetaMask, Coinbase Wallet, etc.)
+    if (typeof window !== 'undefined' && window.ethereum) {
+      console.log('CowSwap Widget - Using window.ethereum as fallback');
+      return window.ethereum;
+    }
+
+    console.warn('CowSwap Widget - No provider available', {
+      isConnected,
+      hasConnector: !!connector,
+      connectorName: connector?.name,
+      hasConnectorClient: !!connectorClient,
+      hasWindowEthereum: typeof window !== 'undefined' ? !!window.ethereum : false,
+    });
+    return null;
+  }, [isMounted, isConnected, connector, connectorClient]);
 
   // All hooks must be called before any conditional returns
   useEffect(() => {
@@ -294,7 +346,7 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
     };
   }, [isConnected, address, chainId, getCowChainId]);
 
-  // Debug logging
+  // Debug logging for wallet connection and provider detection
   useEffect(() => {
     if (isConnected && address) {
       console.log('CowSwap Widget - Wallet Connected:', {
@@ -303,46 +355,74 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
         cowChainId: getCowChainId(chainId),
         provider: !!provider,
         providerType: provider?.constructor?.name,
-        isMounted
+        connector: connector?.name || 'unknown',
+        connectorId: connector?.id,
+        connectorClient: !!connectorClient,
+        isMounted,
+        windowEthereum: typeof window !== 'undefined' ? !!window.ethereum : false,
+      });
+    } else if (!isConnected) {
+      console.log('CowSwap Widget - Wallet Not Connected:', {
+        isMounted,
+        windowEthereum: typeof window !== 'undefined' ? !!window.ethereum : false,
       });
     }
-  }, [isConnected, address, chainId, provider, isMounted, getCowChainId]);
+  }, [isConnected, address, chainId, provider, connector, connectorClient, isMounted, getCowChainId]);
 
-  // Debug token list configuration
+  // Validate token lists on mount and when chainId changes
   useEffect(() => {
-    const tokenLists = [
-      "https://vaulto.dev/api/token-list/",
-      "https://ipfs.io/ipns/tokens.uniswap.org"
-    ];
-    console.log('CowSwap Widget - Token List Configuration:', {
-      tokenLists,
-      chainId: isConnected ? getCowChainId(chainId) : 1,
-      isConnected
-    });
-    
-    // Test if both token lists are accessible
-    if (typeof window !== 'undefined') {
-      tokenLists.forEach((url, index) => {
-        fetch(url)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}`);
-            }
-            return response.json();
-          })
-          .then(data => {
-            console.log(`CowSwap Widget - Token List ${index + 1} Loaded (${url}):`, {
-              name: data.name,
-              tokenCount: data.tokens?.length || 0,
-              version: data.version
-            });
-          })
-          .catch(error => {
-            console.error(`CowSwap Widget - Token List ${index + 1} Error (${url}):`, error);
-          });
+    if (!isMounted || typeof window === 'undefined') return;
+
+    let isCancelled = false;
+
+    const validateTokenLists = async () => {
+      setIsValidatingTokenLists(true);
+      console.log('CowSwap Widget - Validating token lists...', {
+        chainId: getCowChainId(chainId),
+        isConnected,
       });
-    }
-  }, [chainId, isConnected, getCowChainId]);
+
+      try {
+        const validatedUrls = await getCowSwapTokenLists();
+
+        if (!isCancelled) {
+          if (validatedUrls.length > 0) {
+            setValidatedTokenLists(validatedUrls);
+            console.log('CowSwap Widget - Token lists validated successfully:', {
+              count: validatedUrls.length,
+              urls: validatedUrls,
+            });
+          } else {
+            // Keep default URLs if validation fails (widget will handle gracefully)
+            console.warn(
+              'CowSwap Widget - Token list validation failed, using default URLs'
+            );
+            setValidatedTokenLists([
+              'https://vaulto.dev/api/token-list/',
+              'https://ipfs.io/ipns/tokens.uniswap.org',
+            ]);
+          }
+          setIsValidatingTokenLists(false);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('CowSwap Widget - Error validating token lists:', error);
+          // Keep default URLs on error
+          setValidatedTokenLists([
+            'https://vaulto.dev/api/token-list/',
+            'https://ipfs.io/ipns/tokens.uniswap.org',
+          ]);
+          setIsValidatingTokenLists(false);
+        }
+      }
+    };
+
+    validateTokenLists();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isMounted, chainId, isConnected, getCowChainId]);
 
   // Handle token selection from header search
   const handleTokenSelect = useCallback((token: Token, type: 'sell' | 'buy') => {
@@ -396,7 +476,13 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   // Note: params should be stable and not recalculate when isConnected changes
   // to prevent widget from reloading token lists
   const params: CowSwapWidgetParams = useMemo(() => {
-    console.log('Creating widget params:', { sellToken, buyToken, chainId: cowChainId });
+    console.log('Creating widget params:', {
+      sellToken,
+      buyToken,
+      chainId: cowChainId,
+      tokenLists: validatedTokenLists,
+      isValidating: isValidatingTokenLists,
+    });
     
     // Construct absolute URL for images to ensure widget can access them
     // Note: CowSwapWidgetImages interface only supports one property: "emptyOrders"
@@ -409,13 +495,10 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
       "width": "100%", // Responsive width
       "height": "500px", // Optimized height for better mobile compatibility
       "chainId": cowChainId, // Dynamic chain based on user's connected chain
-      "tokenLists": [ // All default enabled token lists. Also see https://tokenlists.org
-        "https://vaulto.dev/api/token-list/",
-        "https://ipfs.io/ipns/tokens.uniswap.org"
-      ],
+      "tokenLists": validatedTokenLists, // Validated token lists with fallback support
       "tradeType": TradeType.SWAP, // Default to SWAP
       "sell": { // Sell token from search selection
-        "asset": sellToken,
+        "asset": sellToken,  
         "amount": "100"
       },
       "buy": { // Buy token from search selection
@@ -481,7 +564,7 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
       "success": "#10b981", // emerald-500
     }
     };
-  }, [sellToken, buyToken, cowChainId]);
+  }, [sellToken, buyToken, cowChainId, validatedTokenLists]);
 
   // Create a stable widget key that only changes when chainId, sellToken, or buyToken changes
   // This prevents the widget from remounting when wallet connects/disconnects
