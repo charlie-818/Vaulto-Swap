@@ -520,7 +520,11 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
       // Only available image parameter: displays when orders table is empty
       "emptyOrders": mobileLogoUrl
     },
-    "sounds": {},
+    "sounds": {
+      "postOrder": null, // Disable moo sound when order is executed
+      "orderExecuted": null, // Disable happy moo sound when order executes successfully
+      "orderError": null, // Disable unhappy moo sound when order has an error
+    },
       "partnerFee": { // 0.5% partner fee for all transactions
         "bps": 50, // 0.5%
         "recipient": "0x88902e56e83331379506A4313595f5B9075Ad3e0", // Fee destination address

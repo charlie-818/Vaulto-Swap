@@ -1,0 +1,421 @@
+/**
+ * One-time script to export past year trading volume and TVL for Ondo tokens
+ * Queries Uniswap v3 subgraph and exports to CSV
+ */
+
+// Load environment variables from .env file
+import 'dotenv/config';
+
+import { queryUniswapV3Subgraph } from './lib/uniswap/client';
+import { isChainSupported } from './lib/uniswap/subgraphs';
+import { getPoolsForToken } from './lib/uniswap/pools';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Token list from user
+const TOKEN_LIST = {
+  "name": "Vaulto Tokens",
+  "logoURI": "https://app.vaulto.ai/favicon.png",
+  "timestamp": "2025-11-21T01:19:33.282Z",
+  "version": {"major": 1, "minor": 2, "patch": 0},
+  "tokens": [
+    {"name": "SPDR S&P 500 ETF Trust", "symbol": "SPYon", "address": "0xfedc5f4a6c38211c1338aa411018dfaf26612c08", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68655/large/spyon_160x160.png?1756156354", "decimals": 18},
+    {"name": "SPDR S&P 500 ETF Trust", "symbol": "SPYon", "address": "0x6a708ead771238919d85930b5a0f10454e1c331a", "chainId": 56, "decimals": 18},
+    {"name": "iShares Core S&P 500 ETF", "symbol": "IVVon", "address": "0x62ca254a363dc3c748e7e955c20447ab5bf06ff7", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68650/large/ivvon_160x160.png?1756156270", "decimals": 18},
+    {"name": "iShares Core S&P 500 ETF", "symbol": "IVVon", "address": "0x1104eb7e85e25eb45f88e638b0c27a06c1a91cb2", "chainId": 56, "decimals": 18},
+    {"name": "iShares 20+ Year Treasury Bond ETF", "symbol": "TLTon", "address": "0x992651bfeb9a0dcc4457610e284ba66d86489d4d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68647/large/tlton_160x160.png?1756156198", "decimals": 18},
+    {"name": "iShares 20+ Year Treasury Bond ETF", "symbol": "TLTon", "address": "0xf69e40069ac227c11459e3f4e8a446b3401616b6", "chainId": 56, "decimals": 18},
+    {"name": "Invesco QQQ Trust", "symbol": "QQQon", "address": "0x0e397938c1aa0680954093495b70a9f5e2249aba", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68654/large/qqqon_160x160.png?1756156339", "decimals": 18},
+    {"name": "Invesco QQQ Trust", "symbol": "QQQon", "address": "0x0cde6936d305d5b34667fc46425e852efd73559a", "chainId": 56, "decimals": 18},
+    {"name": "WisdomTree 500 Digital Fund", "symbol": "SPXUX", "address": "0x873d589f38abbcdd1fca27261aba2f1aa0661d44", "chainId": 1, "decimals": 18},
+    {"name": "WisdomTree 500 Digital Fund", "symbol": "SPXUX", "address": "0x1a149e21bd3e74b7018db79c988b4ba3bbc1873d", "chainId": 10, "decimals": 18},
+    {"name": "WisdomTree 500 Digital Fund", "symbol": "SPXUX", "address": "0x4122047076a1106618e984a8776a3f7bbcb1d429", "chainId": 42161, "decimals": 18},
+    {"name": "WisdomTree 500 Digital Fund", "symbol": "SPXUX", "address": "0xfec440fdf48860ff6e2265bd1ef9cae8bb2cce8a", "chainId": 8453, "decimals": 18},
+    {"name": "WisdomTree 500 Digital Fund", "symbol": "SPXUX", "address": "0x1a149e21bd3e74b7018db79c988b4ba3bbc1873d", "chainId": 43114, "decimals": 18},
+    {"name": "iShares Core MSCI EAFE ETF", "symbol": "IEFAon", "address": "0xfeff7a377a86462f5a2a872009722c154707f09e", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68558/large/iefaon_160x160.png?1756105856", "decimals": 18},
+    {"name": "iShares Core MSCI EAFE ETF", "symbol": "IEFAon", "address": "0x918008c3d29496c37b478b611967beaca365af36", "chainId": 56, "decimals": 18},
+    {"name": "iShares Core US Aggregate Bond ETF", "symbol": "AGGon", "address": "0xff7cf16aa2ffc463b996db2f7b7cf0130336899d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68561/large/aggon_160x160.png?1756105956", "decimals": 18},
+    {"name": "iShares Core S&P Total US Stock Market ETF", "symbol": "ITOTon", "address": "0x0692481c369e2bdc728a69ae31b848343a4567be", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68543/large/itoton_160x160.png?1756105177", "decimals": 18},
+    {"name": "iShares Core S&P Total US Stock Market ETF", "symbol": "ITOTon", "address": "0xcf9caf83053213c44dd7027db3e1e4ac98e55f8f", "chainId": 56, "decimals": 18},
+    {"name": "iShares MSCI EAFE ETF", "symbol": "EFAon", "address": "0x4111b60bc87f2bd1e81e783e271d7f0ec6ee088b", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68555/large/efaon_160x160.png?1756105748", "decimals": 18},
+    {"name": "iShares MSCI EAFE ETF", "symbol": "EFAon", "address": "0x38b9a53bfdc5dba58a29bd6992341927c2fca637", "chainId": 56, "decimals": 18},
+    {"name": "iShares Gold Trust", "symbol": "IAUon", "address": "0x4f0ca3df1c2e6b943cf82e649d576ffe7b2fabcf", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68653/large/iauon_160x160.png?1756156321", "decimals": 18},
+    {"name": "iShares Gold Trust", "symbol": "IAUon", "address": "0xcb2a0f46f67dc4c58a316f1c008edef5c2311795", "chainId": 56, "decimals": 18},
+    {"name": "iShares Russell 1000 Growth ETF", "symbol": "IWFon", "address": "0x8d05432c2786e3f93f1a9a62b9572dbf54f3ea06", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68570/large/iwfon_160x160.png?1756106267", "decimals": 18},
+    {"name": "iShares Russell 1000 Growth ETF", "symbol": "IWFon", "address": "0x40755f06ab7f8de1ab3a9413b1ef562d63de19b1", "chainId": 56, "decimals": 18},
+    {"name": "iShares Core MSCI Emerging Markets ETF", "symbol": "IEMGon", "address": "0xcdd60d15125bf3362b6838d2506b0fa33bc1a515", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68658/large/iemgon_160x160.png?1756156411", "decimals": 18},
+    {"name": "iShares Core MSCI Emerging Markets ETF", "symbol": "IEMGon", "address": "0x22092c94a91d019ad15536725598b0a6be0a73c0", "chainId": 56, "decimals": 18},
+    {"name": "iShares Silver Trust", "symbol": "SLVon", "address": "0xf3e4872e6a4cf365888d93b6146a2baa7348f1a4", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68651/large/slvon_160x160.png?1756156286", "decimals": 18},
+    {"name": "iShares Silver Trust", "symbol": "SLVon", "address": "0x8b872732b07be325a8803cdb480d9d20b6f8d11b", "chainId": 56, "decimals": 18},
+    {"name": "iShares MSCI Emerging Markets ETF", "symbol": "EEMon", "address": "0x77a1a02e4a888ada8620b93c30de8a41e621126c", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68550/large/eemon_160x160.png?1756105571", "decimals": 18},
+    {"name": "iShares MSCI Emerging Markets ETF", "symbol": "EEMon", "address": "0x00c81d35eddf44c75d4db9e07bdcdc236eb0ebcf", "chainId": 56, "decimals": 18},
+    {"name": "Tesla Inc. DL - 001", "symbol": "TSLAon", "address": "0xf6b1117ec07684d3958cad8beb1b302bfd21103f", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68628/large/tslaon_160x160.png?1756130306", "decimals": 18},
+    {"name": "iShares Russell 2000 Value ETF", "symbol": "IWNon", "address": "0x9dcf7f739b8c0270e2fc0cc8d0dabe355a150dba", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68540/large/iwnon_160x160.png?1756105013", "decimals": 18},
+    {"name": "iShares Russell 2000 Value ETF", "symbol": "IWNon", "address": "0xf54b94ea21e1da5d51ef00fd4502225e5394f874", "chainId": 56, "decimals": 18},
+    {"name": "Lockheed Martin Corp.", "symbol": "LMTon", "address": "0x691b126cf619707ed5d16cab1b27c000aa8de300", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68618/large/lmton_160x160.png?1756130231", "decimals": 18},
+    {"name": "Lockheed Martin Corp.", "symbol": "LMTon", "address": "0xd09f7b75b9659b864c6f82bb00ff096f9d277998", "chainId": 56, "decimals": 18},
+    {"name": "NVIDIA Corp", "symbol": "NVDAon", "address": "0x2d1f7226bd1f780af6b9a49dcc0ae00e8df4bdee", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68623/large/nvdaon_160x160.png?1756130268", "decimals": 18},
+    {"name": "NVIDIA Corp", "symbol": "NVDAon", "address": "0xa9ee28c80f960b889dfbd1902055218cba016f75", "chainId": 56, "decimals": 18},
+    {"name": "Eli Lilly and Company", "symbol": "LLYon", "address": "0xf192957ae52db3eb088654403cc2eded014ae556", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68643/large/llyon_160x160.png?1756156107", "decimals": 18},
+    {"name": "Eli Lilly and Company", "symbol": "LLYon", "address": "0x341d31b2be1fee9c00e395a62ba41837f4322eed", "chainId": 56, "decimals": 18},
+    {"name": "The Coca-Cola Company", "symbol": "KOon", "address": "0x74a03d741226f738098c35da8188e57aca50d146", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68569/large/koon_160x160.png?1756106230", "decimals": 18},
+    {"name": "The Coca-Cola Company", "symbol": "KOon", "address": "0x405f38b90bebf1259062cf29da299f3398662bcb", "chainId": 56, "decimals": 18},
+    {"name": "Apple Inc.", "symbol": "AAPLon", "address": "0x14c3abf95cb9c93a8b82c1cdcb76d72cb87b2d4c", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68616/large/aaplon_160x160.png?1756130122", "decimals": 18},
+    {"name": "Pfizer Inc.", "symbol": "PFEon", "address": "0x06954faa913fa14c28eb1b2e459594f22f33f3de", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68549/large/pfeon_160x160.png?1756105512", "decimals": 18},
+    {"name": "The Procter & Gamble Company", "symbol": "PGon", "address": "0x339ce23a355ed6d513dd3e1462975c4ecd86823a", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68593/large/pgon_160x160.png?1756129875", "decimals": 18},
+    {"name": "McDonald's Corporation", "symbol": "MCDon", "address": "0x4c82c8cd9a218612dce60b156b73a36705645e3b", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68620/large/mcdon_160x160.png?1756130244", "decimals": 18},
+    {"name": "iShares Core S&P MidCap ETF", "symbol": "IJHon", "address": "0xfd50fc4e3686a8da814c5c3d6121d8ab98a537f0", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68611/large/ijhon_160x160.png?1756130078", "decimals": 18},
+    {"name": "iShares Russell 2000 ETF", "symbol": "IWMon", "address": "0x070d79021dd7e841123cb0cf554993bf683c511d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68646/large/iwmon_160x160.png?1756156170", "decimals": 18},
+    {"name": "Microsoft Corporation", "symbol": "MSFTon", "address": "0xb812837b81a3a6b81d7cd74cfb19a7f2784555e5", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68625/large/msfton_160x160.png?1756130286", "decimals": 18},
+    {"name": "International Business Machines Corporation", "symbol": "IBMon", "address": "0x25d3f236b2d61656eebdea86ac6d42168e340011", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68608/large/ibmon_160x160.png?1756130056", "decimals": 18},
+    {"name": "JPMorgan Chase & Co.", "symbol": "JPMon", "address": "0x03c1ec4ca9dbb168e6db0def827c085999cbffaf", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68602/large/jpmon_160x160.png?1756129944", "decimals": 18},
+    {"name": "PepsiCo, Inc.", "symbol": "PEPon", "address": "0x3ce219d498d807317f840f4cb0f03fa27dd65046", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68588/large/pepon_160x160.png?1756129807", "decimals": 18},
+    {"name": "Novo Nordisk A/S", "symbol": "NVOon", "address": "0x28151f5888833d3d767c4d6945a0ee50d1b193e3", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68554/large/nvoon_160x160.png?1756105715", "decimals": 18},
+    {"name": "Advanced Micro Devices, Inc. Common Stock", "symbol": "AMDon", "address": "0x0c1f3412a44ff99e40bf14e06e5ea321ae7b3938", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68589/large/amdon_160x160.png?1756129814", "decimals": 18},
+    {"name": "Alphabet Inc. Class A", "symbol": "GOOGLon", "address": "0xba47214edd2bb43099611b208f75e4b42fdcfedc", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68606/large/googlon_160x160.png?1756130033", "decimals": 18},
+    {"name": "Toyota", "symbol": "TMon", "address": "0xab02fc332e9278ebcbbc6b4a8038050c01d15f69", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68583/large/tmon_160x160.png?1756129775", "decimals": 18},
+    {"name": "Intel Corp", "symbol": "INTCon", "address": "0xfda09936dbd717368de0835ba441d9e62069d36f", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68557/large/intcon_160x160.png?1756105832", "decimals": 18},
+    {"name": "Walmart Inc.", "symbol": "WMTon", "address": "0x82106347ddbb23ce44cf4ce4053ef1adf8b9323b", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68582/large/wmton_160x160.png?1756129770", "decimals": 18},
+    {"name": "Blackrock, Inc.", "symbol": "BLKon", "address": "0x7a0f89c1606f71499950aa2590d547c3975b728e", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68629/large/blkon_160x160.png?1756130314", "decimals": 18},
+    {"name": "Meta Platforms, Inc.", "symbol": "METAon", "address": "0x59644165402b611b350645555b50afb581c71eb2", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68645/large/metaon_160x160.png?1756156152", "decimals": 18},
+    {"name": "Chevron Corporation", "symbol": "CVXon", "address": "0x8f3e41b378ae010c46d255f36bfc1d303b52dceb", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68597/large/cvxon_160x160.png?1756129908", "decimals": 18},
+    {"name": "Circle Internet Group", "symbol": "CRCLon", "address": "0x3632dea96a953c11dac2f00b4a05a32cd1063fae", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68595/large/crclon_160x160.png?1756129889", "decimals": 18},
+    {"name": "Cisco Systems, Inc.", "symbol": "CSCOon", "address": "0x980a1001ee94e54142b231f44c7ca7c9df71fbe1", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68566/large/cscoon_160x160.png?1756106113", "decimals": 18},
+    {"name": "Visa Inc. Class A", "symbol": "Von", "address": "0xac37c20c1d0e5285035e056101a64e263ff94a41", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68626/large/von_160x160.png?1756130294", "decimals": 18},
+    {"name": "Abbott Laboratories", "symbol": "ABTon", "address": "0x3859385363f7bb4dfe42811ccf3f294fcd41dd1d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68552/large/abton_160x160.png?1756105660", "decimals": 18},
+    {"name": "Starbucks Corporation Common Stock", "symbol": "SBUXon", "address": "0xf15fbc1349ab99abad63db3f9a510bf413be3bef", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68564/large/sbuxon_160x160.png?1756106053", "decimals": 18},
+    {"name": "Micron Technology", "symbol": "MUon", "address": "0x050362ab1072cb2ce74d74770e22a3203ad04ee5", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68574/large/muon_160x160.png?1756106401", "decimals": 18},
+    {"name": "Amazon.com, Inc.", "symbol": "AMZNon", "address": "0xbb8774fb97436d23d74c1b882e8e9a69322cfd31", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68604/large/amznon_160x160.png?1756129958", "decimals": 18},
+    {"name": "ASML Holding NV", "symbol": "ASMLon", "address": "0xe51ba774ebf6392c45bf1d9e6b334d07992460d3", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68642/large/asmlon_160x160.png?1756156077", "decimals": 18},
+    {"name": "Palo Alto Networks", "symbol": "PANWon", "address": "0x34bfdff25f0fda6d3ad0c33f1e06c0d40bd68885", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68599/large/panwon_160x160.png?1756129923", "decimals": 18},
+    {"name": "Linde plc", "symbol": "LINon", "address": "0x01b19c68f8a9ee3a480da788ba401cfabdf19b93", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68571/large/linon_160x160.png?1756106308", "decimals": 18},
+    {"name": "Intuit", "symbol": "INTUon", "address": "0x6cc0afd51ce4cb6920b775f3d6376ab82b9a93bb", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68619/large/intuon_160x160.png?1756130237", "decimals": 18},
+    {"name": "ServiceNow", "symbol": "NOWon", "address": "0x8bcf9012f4b0c1c3d359edb7133c294f82f80790", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68644/large/nowon_160x160.png?1756156127", "decimals": 18},
+    {"name": "PayPal Holdings, Inc. Common Stock", "symbol": "PYPLon", "address": "0x4efd92f372898b57f292de69fce377dd7d912bdd", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68551/large/pyplon_160x160.png?1756105622", "decimals": 18},
+    {"name": "General Electric", "symbol": "GEon", "address": "0xd904bcf89b7cedf5c89f9df7e829191d695f847e", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68614/large/geon_160x160.png?1756130103", "decimals": 18},
+    {"name": "Super Micro Computer", "symbol": "SMCIon", "address": "0x2ca12a3f9635fd69c21580def14f25c210ca9612", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68559/large/smcion_160x160.png?1756105887", "decimals": 18},
+    {"name": "Alibaba", "symbol": "BABAon", "address": "0x41765f0fcddc276309195166c7a62ae522fa09ef", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68600/large/babaon_160x160.png?1756129931", "decimals": 18},
+    {"name": "Accenture plc Class A", "symbol": "ACNon", "address": "0xaba9ae731aad63335c604e5f6e6a5db2e05f549d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68610/large/acnon_160x160.png?1756130072", "decimals": 18},
+    {"name": "Marvell Technology, Inc.", "symbol": "MRVLon", "address": "0xf404e5f887dbd5508e16a1198fcdd5de1a4296b8", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68560/large/mrvlon_160x160.png?1756105919", "decimals": 18},
+    {"name": "Nike", "symbol": "NKEon", "address": "0xd8e26fcc879b30cb0a0b543925a2b3500f074d81", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68556/large/nkeon_160x160.png?1756105802", "decimals": 18},
+    {"name": "Petrobras", "symbol": "PBRon", "address": "0xd08ddb436e731f32455fe302723ee0fd2e9e8706", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68545/large/pbron_160x160.png?1756105320", "decimals": 18},
+    {"name": "Equinix", "symbol": "EQIXon", "address": "0x73d2ccee12c120e7da265a2de9d9f952a0101b4f", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68546/large/eqixon_160x160.png?1756105357", "decimals": 18},
+    {"name": "Baidu", "symbol": "BIDUon", "address": "0x9d4c6ad12b55e4645b585209f90cc26614061e91", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68591/large/biduon_160x160.png?1756129824", "decimals": 18},
+    {"name": "Wells Fargo", "symbol": "WFCon", "address": "0x4ad2118da8a65eaa81402a3d583fef6ee76bdf3f", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68590/large/wfcon_160x160.png?1756129819", "decimals": 18},
+    {"name": "Boeing Company", "symbol": "BAon", "address": "0x57270d35a840bc5c094da6fbeca033fb71ea6ab0", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68613/large/baon_160x160.png?1756130096", "decimals": 18},
+    {"name": "Futu Holdings", "symbol": "FUTUon", "address": "0x5ce215d9c37a195df88e294a06b8396c296b4e15", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68568/large/futuon_160x160.png?1756106205", "decimals": 18},
+    {"name": "DoorDash", "symbol": "DASHon", "address": "0x241958c86c7744d15d5f6314ba1ea4c81dda2896", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68609/large/dashon_160x160.png?1756130064", "decimals": 18},
+    {"name": "Chipotle", "symbol": "CMGon", "address": "0x25018520138bbab60684ad7983d4432e8b8e926b", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68567/large/cmgon_160x160.png?1756106157", "decimals": 18},
+    {"name": "Taiwan Semiconductor Manufacturing", "symbol": "TSMon", "address": "0x3cafdbfe682aec17d5ace2f97a2f3ab3dcf6a4a9", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68598/large/tsmon_160x160.png?1756129915", "decimals": 18},
+    {"name": "Broadcom Inc.", "symbol": "AVGOon", "address": "0x0d54d4279b9e8c54cd8547c2c75a8ee81a0bcae8", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68601/large/avgoon_160x160.png?1756129937", "decimals": 18},
+    {"name": "Airbnb", "symbol": "ABNBon", "address": "0xb035c3d5083bdc80074f380aebc9fcb68aba0a28", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68565/large/abnbon_160x160.png?1756106088", "decimals": 18},
+    {"name": "Mastercard Incorporated Class A", "symbol": "MAon", "address": "0xa29dc2102dfc2a0a4a5dcb84af984315567c9858", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68617/large/maon_160x160.png?1756130130", "decimals": 18},
+    {"name": "UnitedHealth Group", "symbol": "UNHon", "address": "0x075756f3b6381a79633438faa8964946bf40163d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68624/large/unhon_160x160.png?1756130276", "decimals": 18},
+    {"name": "Costco", "symbol": "COSTon", "address": "0x0c8276e4fec072cf7854be69c70f7773d1610857", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68648/large/coston_160x160.png?1756156219", "decimals": 18},
+    {"name": "JD.com", "symbol": "JDon", "address": "0xdeb6b89088ca9b7d7756087c8a0f7c6df46f319c", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68573/large/jdon_160x160.png?1756106373", "decimals": 18},
+    {"name": "Netflix", "symbol": "NFLXon", "address": "0x032dec3372f25c41ea8054b4987a7c4832cdb338", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68649/large/nflxon_160x160.png?1756156245", "decimals": 18},
+    {"name": "D-Wave Quantum", "symbol": "QBTSon", "address": "0x3807562a482b824c08a564dfefcc471806d3e00a", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68541/large/qbtson_160x160.png?1756105094", "decimals": 18},
+    {"name": "American Express", "symbol": "AXPon", "address": "0x2bc7ff0c5da9f1a4a51f96e77c5b0f7165dc06d2", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68607/large/axpon_160x160.png?1756130045", "decimals": 18},
+    {"name": "Disney", "symbol": "DISon", "address": "0xc3d93b45249e8e06cfeb01d25a96337e8893265d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68587/large/dison_160x160.png?1756129802", "decimals": 18},
+    {"name": "Uber", "symbol": "UBERon", "address": "0x5bcd8195e3ef58f677aef9ebc276b5087c027050", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68562/large/uberon_160x160.png?1756105997", "decimals": 18},
+    {"name": "Arm Holdings plc", "symbol": "ARMon", "address": "0x5bf1b2a808598c0ef4af1673a5457d86fe6d7b3d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68572/large/armon_160x160.png?1756106342", "decimals": 18},
+    {"name": "Adobe", "symbol": "ADBEon", "address": "0x7042a8ffc7c7049684bfbc2fcb41b72380755a43", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68622/large/adbeon_160x160.png?1756130258", "decimals": 18},
+    {"name": "Goldman Sachs", "symbol": "GSon", "address": "0xdb57d9c14e357fc01e49035a808779df41e9b4e2", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68621/large/gson_160x160.png?1756130252", "decimals": 18},
+    {"name": "S&P Global", "symbol": "SPGIon", "address": "0xbc843b147db4c7e00721d76037b8b92e13afe13f", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68596/large/spgion_160x160.png?1756129901", "decimals": 18},
+    {"name": "Salesforce", "symbol": "CRMon", "address": "0x55720ef5b023fd043ae5f8d2e526030207978950", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68603/large/crmon_160x160.png?1756129951", "decimals": 18},
+    {"name": "iBoxx $ High Yield Corporate Bond ETF", "symbol": "HYGon", "address": "0xed3618bb8778f8ebbe2f241da532227591771d04", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68544/large/hygon_160x160.png?1756105272", "decimals": 18},
+    {"name": "Snowflake", "symbol": "SNOWon", "address": "0x5d1a9a9b118ff19721e0111f094f2360b6ef7a2f", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68605/large/snowon_160x160.png?1756130024", "decimals": 18},
+    {"name": "Qualcomm", "symbol": "QCOMon", "address": "0xe3419710c1f77d44b4dab02316d3f048818c4e59", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68563/large/qcomon_160x160.png?1756106020", "decimals": 18},
+    {"name": "MercadoLibre", "symbol": "MELIon", "address": "0x2816169a49953c548bfeb3948dcf05c4a0e4657d", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68652/large/melion_160x160.png?1756156305", "decimals": 18},
+    {"name": "Apollo Global Management", "symbol": "APOon", "address": "0x4d21affd27183b07335935f81a5c26b6a5a15355", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68586/large/apoon_160x160.png?1756129798", "decimals": 18},
+    {"name": "Oracle", "symbol": "ORCLon", "address": "0x8a23c6baadb88512b30475c83df6a63881e33e1e", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68592/large/orclon_160x160.png?1756129828", "decimals": 18},
+    {"name": "Spotify", "symbol": "SPOTon", "address": "0x590f21186489ca1612f49a4b1ff5c66acd6796a9", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68627/large/spoton_160x160.png?1756130300", "decimals": 18},
+    {"name": "Palantir Technologies", "symbol": "PLTRon", "address": "0x0c666485b02f7a87d21add7aeb9f5e64975aa490", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68594/large/pltron_160x160.png?1756129883", "decimals": 18},
+    {"name": "Shopify", "symbol": "SHOPon", "address": "0x908266c1192628371cff7ad2f5eba4de061a0ac5", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68584/large/shopon_160x160.png?1756129783", "decimals": 18},
+    {"name": "Reddit", "symbol": "RDDTon", "address": "0xa9431d354cfad3c6b76e50f0e73b43d48be80cd0", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68585/large/rddton_160x160.png?1756129789", "decimals": 18},
+    {"name": "Coinbase", "symbol": "COINon", "address": "0xf042cfa86cf1d598a75bdb55c3507a1f39f9493b", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68612/large/coinon_160x160.png?1756130090", "decimals": 18},
+    {"name": "Robinhood Markets", "symbol": "HOODon", "address": "0x998f02a9e343ef6e3e6f28700d5a20f839fd74e6", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68581/large/hoodon_160x160.png?1756129765", "decimals": 18},
+    {"name": "MicroStrategy", "symbol": "MSTRon", "address": "0xcabd955322dfbf94c084929ac5e9eca3feb5556f", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68530/large/mstron_160x160.png?1756100941", "decimals": 18},
+    {"name": "Riot Platforms", "symbol": "RIOTon", "address": "0x21deafd91116fce9fe87c8f15bde03f99a309b72", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68547/large/rioton_160x160.png?1756105446", "decimals": 18},
+    {"name": "Figma", "symbol": "FIGon", "address": "0x073e7a0669833d356fa88ca65cc6d454efaaa3c5", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68656/large/figon_160x160.png?1756156375", "decimals": 18},
+    {"name": "Marathon Digital Holdings", "symbol": "MARAon", "address": "0x4604b0b581269843ac7a6b70a5fc019e7762e511", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68548/large/maraon_160x160.png?1756105480", "decimals": 18},
+    {"name": "Hims & Hers Health", "symbol": "HIMSon", "address": "0xca468554e5c0423ee858fe3942c9568c51fcaa79", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68553/large/himson_160x160.png?1756105686", "decimals": 18},
+    {"name": "AppLovin", "symbol": "APPon", "address": "0xd5c5b2883735fa9b658dd52e2fcc8d7c0f1a42ce", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68615/large/appon_160x160.png?1756130115", "decimals": 18},
+    {"name": "GameStop", "symbol": "GMEon", "address": "0x71d24baeb0a033ec5f90ff65c4210545af378d97", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68575/large/gmeon_160x160.png?1756864181", "decimals": 18},
+    {"name": "SharpLink Gaming", "symbol": "SBETon", "address": "0xfdb46864a7c476f0914c5e82cded3364a9f56f8a", "chainId": 1, "logoURI": "https://coin-images.coingecko.com/coins/images/68657/large/sbeton_160x160.png?1756156393", "decimals": 18},
+    {"name": "Grindr", "symbol": "GRNDon", "address": "0xe5b26ba77e6a4d79a7c54a5296d81254269d9700", "chainId": 1, "decimals": 18},
+    {"name": "Morgan Stanley", "symbol": "MSon", "address": "0xb7cba7593baafffc96f9bbc86e578026369dec55", "chainId": 1, "decimals": 18},
+    {"name": "Unilever", "symbol": "ULon", "address": "0x1598f7d25d0b0e1261eab9bd2ad7924291eb26bb", "chainId": 1, "decimals": 18},
+    {"name": "Comcast", "symbol": "CMCSAon", "address": "0x85fd8dfd987988ede1777935d9d09c7ac7f09f0b", "chainId": 1, "decimals": 18},
+    {"name": "Sony", "symbol": "SONYon", "address": "0xaf1382692f9927fd6a6c25add60285628a1879e5", "chainId": 1, "decimals": 18}
+  ]
+};
+
+interface Token {
+  name: string;
+  symbol: string;
+  address: string;
+  chainId: number;
+  logoURI?: string;
+  decimals: number;
+}
+
+interface TokenVolumeResult {
+  symbol: string;
+  name: string;
+  chainId: number;
+  address: string;
+  totalVolumeUSD: number;
+  totalValueLockedUSD: number;
+}
+
+// GraphQL query to get token volume and TVL data
+// Volume is calculated from tokenDayData entries over the past year
+const TOKEN_VOLUME_QUERY = `
+  query GetTokenVolume($id: ID!, $startDate: Int!) {
+    token(id: $id) {
+      id
+      symbol
+      name
+      totalValueLockedUSD
+      tokenDayData(
+        where: { date_gte: $startDate }
+        orderBy: date
+        orderDirection: asc
+      ) {
+        date
+        volumeUSD
+      }
+    }
+  }
+`;
+
+interface TokenVolumeResponse {
+  token: {
+    id: string;
+    symbol: string;
+    name: string;
+    totalValueLockedUSD: string;
+    tokenDayData: Array<{
+      date: number;
+      volumeUSD: string;
+    }>;
+  } | null;
+}
+
+/**
+ * Query volume and TVL for a single token
+ * 
+ * Volume is calculated by summing volumeUSD from tokenDayData entries over the past year.
+ * TVL is calculated by summing TVL from all pools containing this token,
+ * which is the same approach used by the application's search functionality.
+ * 
+ * Supports multiple chains including:
+ * - Ethereum (chainId: 1)
+ * - BNB/BSC (chainId: 56)
+ * - Optimism (chainId: 10)
+ * - Arbitrum (chainId: 42161)
+ * - Base (chainId: 8453)
+ * - Avalanche (chainId: 43114)
+ * - Polygon (chainId: 137)
+ * - And other supported chains
+ */
+async function getTokenVolume(token: Token): Promise<TokenVolumeResult | null> {
+  // Skip if chain is not supported (BNB/BSC chainId 56 is supported)
+  if (!isChainSupported(token.chainId)) {
+    console.warn(`Skipping ${token.symbol} on chain ${token.chainId} - chain not supported`);
+    return null;
+  }
+
+  const normalizedAddress = token.address.toLowerCase();
+
+  try {
+    // Calculate start date (one year ago)
+    // tokenDayData.date is stored as Unix timestamp in seconds (start of day in UTC)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    // Set to start of day (midnight UTC) and convert to Unix timestamp in seconds
+    oneYearAgo.setUTCHours(0, 0, 0, 0);
+    const startDate = Math.floor(oneYearAgo.getTime() / 1000);
+
+    // Query token info and tokenDayData entries from the past year
+    const tokenResponse = await queryUniswapV3Subgraph<TokenVolumeResponse>(
+      token.chainId,
+      TOKEN_VOLUME_QUERY,
+      { id: normalizedAddress, startDate }
+    );
+
+    let symbol = token.symbol;
+    let name = token.name;
+    let volumeUSD = 0;
+
+    if (tokenResponse.token) {
+      symbol = tokenResponse.token.symbol || token.symbol;
+      name = tokenResponse.token.name || token.name;
+      
+      // Sum volume from all tokenDayData entries (past year)
+      volumeUSD = (tokenResponse.token.tokenDayData || []).reduce(
+        (sum, dayData) => sum + parseFloat(dayData.volumeUSD || '0'),
+        0
+      );
+    }
+
+    // Calculate TVL by summing TVL from all pools containing this token
+    // This is the same approach used in the application
+    let totalTVLUSD = 0;
+    try {
+      const poolsResult = await getPoolsForToken(token.chainId, normalizedAddress, 100);
+      // Sum TVL from all pools
+      totalTVLUSD = poolsResult.pools.reduce((sum, pool) => sum + pool.tvlUSD, 0);
+    } catch (poolError) {
+      // If pool query fails, try to use token entity TVL as fallback
+      if (tokenResponse.token) {
+        totalTVLUSD = parseFloat(tokenResponse.token.totalValueLockedUSD || '0');
+      }
+      console.warn(`Could not fetch pools for ${token.symbol}, using token entity TVL: ${totalTVLUSD}`);
+    }
+
+    return {
+      symbol,
+      name,
+      chainId: token.chainId,
+      address: normalizedAddress,
+      totalVolumeUSD: volumeUSD,
+      totalValueLockedUSD: totalTVLUSD,
+    };
+  } catch (error) {
+    console.error(`Error querying ${token.symbol} on chain ${token.chainId}:`, error instanceof Error ? error.message : error);
+    // Return result with 0 volume and TVL on error
+    return {
+      symbol: token.symbol,
+      name: token.name,
+      chainId: token.chainId,
+      address: normalizedAddress,
+      totalVolumeUSD: 0,
+      totalValueLockedUSD: 0,
+    };
+  }
+}
+
+/**
+ * Escape CSV field
+ */
+function escapeCsvField(field: string): string {
+  if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+    return `"${field.replace(/"/g, '""')}"`;
+  }
+  return field;
+}
+
+/**
+ * Generate CSV content
+ */
+function generateCsv(results: TokenVolumeResult[]): string {
+  const headers = ['Symbol', 'Name', 'Chain ID', 'Address', 'Total Volume USD', 'Total Value Locked USD'];
+  const rows = results.map(result => [
+    escapeCsvField(result.symbol),
+    escapeCsvField(result.name),
+    result.chainId.toString(),
+    escapeCsvField(result.address),
+    result.totalVolumeUSD.toFixed(2),
+    result.totalValueLockedUSD.toFixed(2),
+  ]);
+
+  return [
+    headers.join(','),
+    ...rows.map(row => row.join(','))
+  ].join('\n');
+}
+
+/**
+ * Main execution
+ */
+async function main() {
+  // Verify API key is loaded
+  if (!process.env.THE_GRAPH_API_KEY) {
+    console.error('❌ THE_GRAPH_API_KEY is not set in environment variables.');
+    console.error('   Make sure it is set in your .env file.');
+    process.exit(1);
+  }
+
+  console.log('Starting Ondo token volume and TVL export (past year)...\n');
+  console.log(`API Key loaded: ${process.env.THE_GRAPH_API_KEY.substring(0, 10)}...\n`);
+
+  // Filter tokens ending in "on"
+  const ondoTokens = TOKEN_LIST.tokens.filter(token => 
+    token.symbol.toLowerCase().endsWith('on')
+  );
+
+  // Show chain distribution
+  const chainCounts = ondoTokens.reduce((acc, token) => {
+    const chainName = token.chainId === 1 ? 'Ethereum' : 
+                     token.chainId === 56 ? 'BNB/BSC' :
+                     token.chainId === 10 ? 'Optimism' :
+                     token.chainId === 42161 ? 'Arbitrum' :
+                     token.chainId === 8453 ? 'Base' :
+                     token.chainId === 43114 ? 'Avalanche' :
+                     `Chain ${token.chainId}`;
+    acc[chainName] = (acc[chainName] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  console.log(`Found ${ondoTokens.length} tokens ending in "on"`);
+  console.log('Chain distribution:');
+  Object.entries(chainCounts).forEach(([chain, count]) => {
+    console.log(`  ${chain}: ${count} tokens`);
+  });
+  console.log('\n');
+
+  // Query volume and TVL for each token
+  const results: TokenVolumeResult[] = [];
+  
+  for (let i = 0; i < ondoTokens.length; i++) {
+    const token = ondoTokens[i];
+    console.log(`[${i + 1}/${ondoTokens.length}] Querying ${token.symbol} on chain ${token.chainId}...`);
+    
+    const result = await getTokenVolume(token);
+    if (result) {
+      results.push(result);
+      console.log(`  Volume: $${result.totalVolumeUSD.toFixed(2)}, TVL: $${result.totalValueLockedUSD.toFixed(2)}\n`);
+    }
+
+    // Small delay to avoid rate limiting
+    if (i < ondoTokens.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+
+  // Sort by volume descending
+  results.sort((a, b) => b.totalVolumeUSD - a.totalVolumeUSD);
+
+  // Generate CSV
+  const csvContent = generateCsv(results);
+  
+  // Write to file with timestamp
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  const filename = `ondo-token-volume-export-${timestamp}.csv`;
+  const filepath = path.join(process.cwd(), filename);
+  
+  fs.writeFileSync(filepath, csvContent, 'utf-8');
+  
+  console.log(`\nExport complete!`);
+  console.log(`Results: ${results.length} tokens`);
+  console.log(`File saved: ${filename}\n`);
+  
+  // Display summary
+  const totalVolume = results.reduce((sum, r) => sum + r.totalVolumeUSD, 0);
+  const totalTVL = results.reduce((sum, r) => sum + r.totalValueLockedUSD, 0);
+  console.log(`Total volume across all tokens: $${totalVolume.toFixed(2)}`);
+  console.log(`Total TVL across all tokens: $${totalTVL.toFixed(2)}`);
+  console.log(`\nTop 10 by volume:`);
+  results.slice(0, 10).forEach((r, i) => {
+    console.log(`  ${i + 1}. ${r.symbol} (Chain ${r.chainId}): Volume $${r.totalVolumeUSD.toFixed(2)}, TVL $${r.totalValueLockedUSD.toFixed(2)}`);
+  });
+}
+
+// Run the script
+main().catch(error => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
+
