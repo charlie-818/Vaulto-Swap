@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getTokenLogoUrl } from '@/query-token-logo';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { formatTVL, formatFeeTier, truncateAddress } from '@/lib/utils/formatters';
@@ -286,6 +288,7 @@ const getExplorerUrl = (chainId: number, address: string): string | null => {
 };
 
 export default function TokenSearch({ chainId }: TokenSearchProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [tokens, setTokens] = useState<Token[]>([]);
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
@@ -1379,71 +1382,94 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                             return null;
                           })()}
                         </div>
-                        <div className="flex items-center gap-1 md:gap-2">
-                          <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
-                          <div className="flex items-center gap-0.5 md:gap-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(token.address);
-                                toast.success('Address copied!', {
-                                  duration: 2000,
-                                  style: {
-                                    background: 'rgba(15, 23, 42, 0.95)',
-                                    color: '#fff',
-                                    border: '1px solid rgba(250, 204, 21, 0.3)',
-                                  },
-                                });
-                              }}
-                              className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
-                              title="Copy address"
-                              aria-label="Copy address"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                                className="w-3 h-3"
+                        <div className="flex items-center justify-between gap-1 md:gap-2">
+                          <div className="flex items-center gap-1 md:gap-2">
+                            <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
+                            <div className="flex items-center gap-0.5 md:gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(token.address);
+                                  toast.success('Address copied!', {
+                                    duration: 2000,
+                                    style: {
+                                      background: 'rgba(15, 23, 42, 0.95)',
+                                      color: '#fff',
+                                      border: '1px solid rgba(250, 204, 21, 0.3)',
+                                    },
+                                  });
+                                }}
+                                className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                title="Copy address"
+                                aria-label="Copy address"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                />
-                              </svg>
-                            </button>
-                            {(() => {
-                              const explorerUrl = getExplorerUrl(token.chainId, token.address);
-                              if (!explorerUrl) return null;
-                              return (
-                                <a
-                                  href={explorerUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
-                                  title="View on Explorer"
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={2}
+                                  stroke="currentColor"
+                                  className="w-3 h-3"
                                 >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                    className="w-3 h-3"
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </button>
+                              {(() => {
+                                const explorerUrl = getExplorerUrl(token.chainId, token.address);
+                                if (!explorerUrl) return null;
+                                return (
+                                  <a
+                                    href={explorerUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                    title="View on Explorer"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                </a>
-                              );
-                            })()}
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={2}
+                                      stroke="currentColor"
+                                      className="w-3 h-3"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                      />
+                                    </svg>
+                                  </a>
+                                );
+                              })()}
+                            </div>
                           </div>
+                          {(() => {
+                            const displayVolume = getDisplayVolume(token);
+                            const hasVolume = displayVolume !== null && displayVolume > 0;
+                            
+                            if (hasVolume) {
+                              return (
+                                <Link
+                                  href={`/token/${token.address}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  prefetch={true}
+                                  className="inline-flex items-center justify-center h-4 px-2 text-[10px] font-semibold bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-gray-800 rounded transition-all duration-200 shadow-sm shadow-yellow-500/25"
+                                  title="View token details"
+                                >
+                                  <span>More Info</span>
+                                </Link>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                       </div>
                     </li>
