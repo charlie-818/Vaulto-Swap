@@ -14,6 +14,13 @@
   }
 }
 
+/* Prevent horizontal scrolling globally */
+html {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -24,6 +31,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   position: relative;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Ensure root container prevents horizontal overflow */
+#__next,
+[data-nextjs-scroll-focus-boundary] {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Mobile-specific optimizations */
@@ -33,9 +51,8 @@ body {
     -ms-text-size-adjust: 100%;
   }
   
-  /* Prevent horizontal scroll on mobile */
+  /* Additional mobile-specific horizontal scroll prevention */
   html, body {
-    overflow-x: hidden;
     position: relative;
   }
   
