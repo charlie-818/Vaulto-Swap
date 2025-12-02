@@ -154,7 +154,7 @@ export default function Home() {
         </div>
       </div>
       {/* Header - Sticky on mobile */}
-      <header className={`sticky top-0 left-0 right-0 z-50 backdrop-blur-sm transition-all duration-300 border-b pt-2 w-full ${isScrolled ? 'bg-black/80 border-gray-800 pb-2' : 'bg-transparent border-transparent'}`} role="banner" style={{ position: 'sticky', top: 0 }}>
+      <header className="sticky top-0 left-0 right-0 z-50 backdrop-blur-sm pt-2 w-full bg-transparent border-transparent" role="banner" style={{ position: 'sticky', top: 0 }}>
         <div className="container mx-auto px-4 py-3 relative">
           <div className="flex items-center justify-between gap-2 md:gap-4">
             <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
