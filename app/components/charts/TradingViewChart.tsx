@@ -58,8 +58,20 @@ export default function TradingViewChart({
       // Default to NYSE for others
       return `NYSE:${symbol}`;
     }
-    // For crypto, return symbol as-is or format as needed
-    return symbol;
+    // For crypto, format as CRYPTO:<ticker>USD
+    // Extract ticker if symbol already has exchange prefix
+    let ticker: string;
+    if (symbol.includes(':')) {
+      ticker = symbol.split(':')[1];
+    } else {
+      ticker = symbol;
+    }
+    // Append USD if ticker doesn't already end with USD or USDT
+    const upperTicker = ticker.toUpperCase();
+    if (!upperTicker.endsWith('USD') && !upperTicker.endsWith('USDT')) {
+      ticker = `${ticker}USD`;
+    }
+    return `CRYPTO:${ticker}`;
   }, [symbol, type]);
 
   // Build TradingView Advanced Charts widget URL
