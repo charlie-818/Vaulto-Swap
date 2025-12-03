@@ -32,6 +32,7 @@ interface Token {
 
 interface TokenSearchProps {
   chainId: number;
+  activeTab?: 'public' | 'private';
 }
 
 // Map wagmi chain IDs to CoW Swap supported chains
@@ -286,7 +287,7 @@ const getExplorerUrl = (chainId: number, address: string): string | null => {
   return `${config.explorer}/token/${address}`;
 };
 
-export default function TokenSearch({ chainId }: TokenSearchProps) {
+export default function TokenSearch({ chainId, activeTab = 'public' }: TokenSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [tokens, setTokens] = useState<Token[]>([]);
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
@@ -321,6 +322,50 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
   useEffect(() => {
     fetchingLogosRef.current = fetchingLogos;
   }, [fetchingLogos]);
+
+  // Private tokens list (Solana addresses)
+  const privateTokens: Token[] = useMemo(() => [
+    {
+      address: "PresTj4Yc2bAR197Er7wz4UUKSfqt6FryBEdAriBoQB",
+      symbol: "Anduril",
+      name: "Anduril",
+      decimals: 9,
+      chainId: 101, // Solana mainnet
+      logoURI: "/Private Companies/anduril.webp",
+    },
+    {
+      address: "Pren1FvFX6J3E4kXhJuCiAD5aDmGEb7qJRncwA8Lkhw",
+      symbol: "Anthropic",
+      name: "Anthropic",
+      decimals: 9,
+      chainId: 101,
+      logoURI: "/Private Companies/anthropic.webp",
+    },
+    {
+      address: "PreweJYECqtQwBtpxHL171nL2K6umo692gTm7Q3rpgF",
+      symbol: "OpenAI",
+      name: "OpenAI",
+      decimals: 9,
+      chainId: 101,
+      logoURI: "/Private Companies/openai.webp",
+    },
+    {
+      address: "PreANxuXjsy2pvisWWMNB6YaJNzr7681wJJr2rHsfTh",
+      symbol: "SpaceX",
+      name: "SpaceX",
+      decimals: 9,
+      chainId: 101,
+      logoURI: "/Private Companies/spacex.webp",
+    },
+    {
+      address: "PreC1KtJ1sBPPqaeeqL6Qb15GTLCYVvyYEwxhdfTwfx",
+      symbol: "xAI",
+      name: "xAI",
+      decimals: 9,
+      chainId: 101,
+      logoURI: "/Private Companies/xai.webp",
+    },
+  ], []);
 
   // Vaulto tokens list
   const vaultoTokens: Token[] = useMemo(() => [
@@ -678,6 +723,14 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
 
   // Fetch tokens from API
   useEffect(() => {
+    // For private tab, use private tokens only
+    if (activeTab === 'private') {
+      setTokens(privateTokens);
+      fetchTokenLogos(privateTokens);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchTokens = async () => {
       setIsLoading(true);
       const allTokens: Token[] = [];
@@ -793,7 +846,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
     };
 
     fetchTokens();
-  }, [chainId, processAndSetTokens, fetchTokenLogos, standardTokens, vaultoTokens]);
+  }, [chainId, processAndSetTokens, fetchTokenLogos, standardTokens, vaultoTokens, activeTab, privateTokens]);
 
   // Default tokens to show when search is first opened
   const getDefaultTokens = useCallback((): Token[] => {
@@ -881,6 +934,28 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
 
   // Filter tokens based on search query with Uniswap integration
   useEffect(() => {
+    // For private tab, use simplified filtering
+    if (activeTab === 'private') {
+      if (!searchQuery.trim()) {
+        // Show all private tokens when search is open but no query
+        if (isOpen) {
+          setFilteredTokens(privateTokens);
+        } else {
+          setFilteredTokens([]);
+        }
+      } else {
+        // Filter private tokens by name/symbol
+        const query = searchQuery.trim().toLowerCase();
+        const filtered = privateTokens.filter(token => 
+          token.name.toLowerCase().includes(query) || 
+          token.symbol.toLowerCase().includes(query)
+        );
+        setFilteredTokens(filtered);
+      }
+      setIsLoadingUniswap(false);
+      return;
+    }
+
     if (!searchQuery.trim()) {
       // Show default tokens when search is open but no query
       if (isOpen) {
@@ -1056,7 +1131,7 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
         abortControllerRef.current = null;
       }
     };
-  }, [searchQuery, tokens, isOpen, getDefaultTokens, isMobile, chainId, enrichDefaultTokensWithUniswapData]);
+  }, [searchQuery, tokens, isOpen, getDefaultTokens, isMobile, chainId, enrichDefaultTokensWithUniswapData, activeTab, privateTokens]);
 
   // Keyboard shortcuts: "/" to open search, "Escape" to close
   useEffect(() => {
@@ -1339,94 +1414,57 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
-                          <div className="text-white text-base md:text-sm font-medium">
-                            {token.symbol}
-                            {(() => {
-                              const poolPair = getTopPoolPair(token);
-                              if (poolPair) {
-                                return <span className="text-gray-400 font-normal text-xs md:text-[10px]"> ({poolPair})</span>;
-                              }
-                              return null;
-                            })()}
-                          </div>
-                          {(() => {
-                            const displayTVL = getDisplayTVL(token);
-                            const hasTVL = displayTVL !== null && displayTVL > 0;
-                            
-                            if (hasTVL) {
-                              return (
-                                <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
-                                  {formatTVL(displayTVL)} <span className="text-[9px] text-white">TVL</span>
-                                </span>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
-                          <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
-                          {(() => {
-                            const displayVolume = getDisplayVolume(token);
-                            const hasVolume = displayVolume !== null && displayVolume > 0;
-                            
-                            if (hasVolume) {
-                              return (
-                                <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
-                                  {formatTVL(displayVolume)} <span className="text-[9px] text-white">24h</span>
-                                </span>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                        <div className="flex items-center justify-between gap-1 md:gap-2">
-                          <div className="flex items-center gap-1 md:gap-2">
-                            <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
-                            <div className="flex items-center gap-0.5 md:gap-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(token.address);
-                                  toast.success('Address copied!', {
-                                    duration: 2000,
-                                    style: {
-                                      background: 'rgba(15, 23, 42, 0.95)',
-                                      color: '#fff',
-                                      border: '1px solid rgba(250, 204, 21, 0.3)',
-                                    },
-                                  });
-                                }}
-                                className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
-                                title="Copy address"
-                                aria-label="Copy address"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                  className="w-3 h-3"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </button>
-                              {(() => {
-                                const explorerUrl = getExplorerUrl(token.chainId, token.address);
-                                if (!explorerUrl) return null;
-                                return (
+                        {activeTab === 'private' ? (
+                          // Simplified display for private tokens
+                          <>
+                            <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
+                              <div className="text-white text-base md:text-sm font-medium">
+                                {token.name}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-1 md:gap-2">
+                              <div className="flex items-center gap-1 md:gap-2">
+                                <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
+                                <div className="flex items-center gap-0.5 md:gap-1">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(token.address);
+                                      toast.success('Address copied!', {
+                                        duration: 2000,
+                                        style: {
+                                          background: 'rgba(15, 23, 42, 0.95)',
+                                          color: '#fff',
+                                          border: '1px solid rgba(250, 204, 21, 0.3)',
+                                        },
+                                      });
+                                    }}
+                                    className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                    title="Copy address"
+                                    aria-label="Copy address"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={2}
+                                      stroke="currentColor"
+                                      className="w-3 h-3"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                  </button>
                                   <a
-                                    href={explorerUrl}
+                                    href={`https://solscan.io/token/${token.address}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
                                     className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
-                                    title="View on Explorer"
+                                    title="View on Solscan"
                                   >
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
@@ -1443,32 +1481,146 @@ export default function TokenSearch({ chainId }: TokenSearchProps) {
                                       />
                                     </svg>
                                   </a>
-                                );
+                                </div>
+                              </div>
+                              <span className="text-gray-500 text-xs">Solana</span>
+                            </div>
+                          </>
+                        ) : (
+                          // Full display for public tokens
+                          <>
+                            <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
+                              <div className="text-white text-base md:text-sm font-medium">
+                                {token.symbol}
+                                {(() => {
+                                  const poolPair = getTopPoolPair(token);
+                                  if (poolPair) {
+                                    return <span className="text-gray-400 font-normal text-xs md:text-[10px]"> ({poolPair})</span>;
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                              {(() => {
+                                const displayTVL = getDisplayTVL(token);
+                                const hasTVL = displayTVL !== null && displayTVL > 0;
+                                
+                                if (hasTVL) {
+                                  return (
+                                    <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                      {formatTVL(displayTVL)} <span className="text-[9px] text-white">TVL</span>
+                                    </span>
+                                  );
+                                }
+                                return null;
                               })()}
                             </div>
-                          </div>
-                          {(() => {
-                            const displayVolume = getDisplayVolume(token);
-                            const hasVolume = displayVolume !== null && displayVolume > 0;
-                            
-                            if (hasVolume) {
-                              return (
-                                <Link
-                                  href={`/token/${token.address}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                  }}
-                                  prefetch={true}
-                                  className="inline-flex items-center justify-center h-4 px-2 text-[10px] font-semibold bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-gray-800 rounded transition-all duration-200 shadow-sm shadow-yellow-500/25"
-                                  title="View token details"
-                                >
-                                  <span>More Info</span>
-                                </Link>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
+                            <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
+                              <div className="text-gray-400 text-sm md:text-xs truncate">{token.name}</div>
+                              {(() => {
+                                const displayVolume = getDisplayVolume(token);
+                                const hasVolume = displayVolume !== null && displayVolume > 0;
+                                
+                                if (hasVolume) {
+                                  return (
+                                    <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                      {formatTVL(displayVolume)} <span className="text-[9px] text-white">24h</span>
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                            <div className="flex items-center justify-between gap-1 md:gap-2">
+                              <div className="flex items-center gap-1 md:gap-2">
+                                <span className="text-gray-600 text-xs font-mono">{truncateAddress(token.address, 6, 4)}</span>
+                                <div className="flex items-center gap-0.5 md:gap-1">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(token.address);
+                                      toast.success('Address copied!', {
+                                        duration: 2000,
+                                        style: {
+                                          background: 'rgba(15, 23, 42, 0.95)',
+                                          color: '#fff',
+                                          border: '1px solid rgba(250, 204, 21, 0.3)',
+                                        },
+                                      });
+                                    }}
+                                    className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                    title="Copy address"
+                                    aria-label="Copy address"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={2}
+                                      stroke="currentColor"
+                                      className="w-3 h-3"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                  </button>
+                                  {(() => {
+                                    const explorerUrl = getExplorerUrl(token.chainId, token.address);
+                                    if (!explorerUrl) return null;
+                                    return (
+                                      <a
+                                        href={explorerUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="inline-flex items-center justify-center w-4 h-4 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded transition-colors"
+                                        title="View on Explorer"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          strokeWidth={2}
+                                          stroke="currentColor"
+                                          className="w-3 h-3"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                          />
+                                        </svg>
+                                      </a>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                              {(() => {
+                                const displayVolume = getDisplayVolume(token);
+                                const hasVolume = displayVolume !== null && displayVolume > 0;
+                                
+                                if (hasVolume) {
+                                  return (
+                                    <Link
+                                      href={`/token/${token.address}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                      prefetch={true}
+                                      className="inline-flex items-center justify-center h-4 px-2 text-[10px] font-semibold bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-gray-800 rounded transition-all duration-200 shadow-sm shadow-yellow-500/25"
+                                      title="View token details"
+                                    >
+                                      <span>More Info</span>
+                                    </Link>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </li>
                   );

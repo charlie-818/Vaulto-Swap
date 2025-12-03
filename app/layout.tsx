@@ -128,6 +128,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+        <script src="https://plugin.jup.ag/plugin-v1.js" data-preload defer></script>
       </head>
       <body className={inter.className}>
         {/* Google tag (gtag.js) */}

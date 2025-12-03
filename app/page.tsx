@@ -7,6 +7,8 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useRef, useState } from "react";
 import { trackWalletConnectClick, trackWalletConnected, trackWalletDisconnected } from "@/lib/utils/analytics";
 import TokenSearch from "./components/TokenSearch";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
 // Dynamically import the CoW widget to prevent SSR issues
 const CowSwapWidgetWrapper = dynamic(
@@ -16,39 +18,116 @@ const CowSwapWidgetWrapper = dynamic(
   }
 );
 
+// Dynamically import the Jupiter widget to prevent SSR issues
+const JupiterWidgetWrapper = dynamic(
+  () => import("./components/swap/JupiterWidgetWrapper"),
+  { 
+    ssr: false
+  }
+);
 
-// Wallet button component (uses RainbowKit)
-function WalletButton() {
+
+// Wallet button component - shows Ethereum or Solana wallet based on active tab
+function WalletButton({ activeTab }: { activeTab: 'public' | 'private' }) {
+  // Ethereum wallet hooks
   const { address, isConnected, connector } = useAccount();
   const chainId = useChainId();
+  const { disconnect: disconnectEthereum } = useDisconnect();
   const wasConnectedRef = useRef(false);
+  
+  // Solana wallet hooks
+  const solanaWallet = useWallet();
+  const { setVisible } = useWalletModal();
 
-  // Track wallet connection
+  // Track Ethereum wallet connection
   useEffect(() => {
-    if (isConnected && address && !wasConnectedRef.current) {
+    if (activeTab === 'public' && isConnected && address && !wasConnectedRef.current) {
       trackWalletConnected(
         address,
         chainId,
         connector?.name || 'unknown'
       );
       wasConnectedRef.current = true;
-    } else if (!isConnected && wasConnectedRef.current) {
+    } else if (activeTab === 'public' && !isConnected && wasConnectedRef.current) {
       trackWalletDisconnected();
       wasConnectedRef.current = false;
     }
-  }, [isConnected, address, chainId, connector]);
+  }, [isConnected, address, chainId, connector, activeTab]);
 
-  const { disconnect } = useDisconnect();
-
-  const handleDisconnect = () => {
-    disconnect();
+  // Solana wallet handlers
+  const handleSolanaConnect = () => {
+    trackWalletConnectClick();
+    setVisible(true);
   };
 
-  // When connected, show disconnect button
+  const handleSolanaDisconnect = () => {
+    solanaWallet.disconnect();
+  };
+
+  // Ethereum wallet handlers
+  const handleEthereumDisconnect = () => {
+    disconnectEthereum();
+  };
+
+  // Render based on active tab
+  if (activeTab === 'private') {
+    // Solana wallet button
+    if (solanaWallet.connected && solanaWallet.publicKey) {
+      return (
+        <button
+          onClick={handleSolanaDisconnect}
+          className="px-2 py-1 md:px-3 md:py-2 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 flex items-center justify-center group"
+          title="Disconnect Wallet"
+          aria-label="Disconnect Wallet"
+        >
+          <svg 
+            className="w-5 h-5 md:w-6 md:h-6 text-red-400 group-hover:text-red-300 transition-colors duration-200" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+            />
+          </svg>
+        </button>
+      );
+    }
+
+    return (
+      <button
+        onClick={handleSolanaConnect}
+        className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2"
+        title="Connect Solana Wallet"
+        aria-label="Connect Solana Wallet"
+      >
+        <svg
+          className="w-5 h-5 md:w-5 md:h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          />
+        </svg>
+        <span className="hidden md:inline text-sm">Connect</span>
+      </button>
+    );
+  }
+
+  // Ethereum wallet button (Public tab) - original implementation
   if (isConnected) {
     return (
       <button
-        onClick={handleDisconnect}
+        onClick={handleEthereumDisconnect}
         className="px-2 py-1 md:px-3 md:py-2 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 flex items-center justify-center group"
         title="Disconnect Wallet"
         aria-label="Disconnect Wallet"
@@ -115,9 +194,48 @@ function WalletButton() {
 }
 
 
+// Market tab switcher component
+function MarketTabSwitcher({ activeTab, onTabChange }: { activeTab: 'public' | 'private'; onTabChange: (tab: 'public' | 'private') => void }) {
+  return (
+    <nav aria-label="Market navigation" className="hidden md:block">
+      <ul className="flex items-center gap-4">
+        <li>
+          <button
+            onClick={() => onTabChange('public')}
+            className={`text-sm transition-colors ${
+              activeTab === 'public'
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+            aria-label="Public Markets"
+            aria-pressed={activeTab === 'public'}
+          >
+            Public
+          </button>
+        </li>
+        <li>
+          <button
+            onClick={() => onTabChange('private')}
+            className={`text-sm transition-colors ${
+              activeTab === 'private'
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+            aria-label="Private Markets"
+            aria-pressed={activeTab === 'private'}
+          >
+            Private
+          </button>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+
 export default function Home() {
   const chainId = useChainId();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeTab, setActiveTab] = useState<'public' | 'private'>('public');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -202,16 +320,19 @@ export default function Home() {
               </nav>
             </div>
             
-            {/* Connect Wallet Button */}
-            <div className="flex-shrink-0">
-              <WalletButton />
+            {/* Right side: Market Tab Switcher and Connect Wallet Button */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              {/* Market Tab Switcher */}
+              <MarketTabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+              {/* Connect Wallet Button - Shows Ethereum or Solana based on active tab */}
+              <WalletButton activeTab={activeTab} />
             </div>
           </div>
           
           {/* Token Search Bar - Centered in header */}
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-full max-w-md px-4 pointer-events-none">
             <div className="flex justify-center pointer-events-auto">
-              <TokenSearch chainId={chainId} />
+              <TokenSearch chainId={chainId} activeTab={activeTab} />
             </div>
           </div>
         </div>
@@ -232,7 +353,11 @@ export default function Home() {
           </div>
           
           <div className="w-full max-w-6xl mx-auto flex-1 flex flex-col md:block">
-            <CowSwapWidgetWrapper />
+            {activeTab === 'public' ? (
+              <CowSwapWidgetWrapper />
+            ) : (
+              <JupiterWidgetWrapper />
+            )}
           </div>
         </section>
       </div>

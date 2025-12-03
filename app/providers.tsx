@@ -11,6 +11,23 @@ import {
   trustWallet 
 } from "@rainbow-me/rainbowkit/wallets";
 import "@rainbow-me/rainbowkit/styles.css";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  TorusWalletAdapter,
+  LedgerWalletAdapter,
+  CoinbaseWalletAdapter,
+  TrustWalletAdapter,
+  WalletConnectWalletAdapter,
+  Coin98WalletAdapter,
+  SafePalWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
+import { clusterApiUrl } from "@solana/web3.js";
+import { useMemo } from "react";
+import "@solana/wallet-adapter-react-ui/styles.css";
 
 // Initialize QueryClient
 const queryClient = new QueryClient();
@@ -69,6 +86,44 @@ const rainbowKitTheme = darkTheme({
   fontStack: "system",
 });
 
+// Solana Wallet Provider Component
+function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
+  // Use mainnet for Solana
+  const network = WalletAdapterNetwork.Mainnet;
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+
+  // Supported Solana wallets - More options shown by default
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new CoinbaseWalletAdapter(),
+      new TorusWalletAdapter(),
+      new TrustWalletAdapter(),
+      new Coin98WalletAdapter(),
+      new SafePalWalletAdapter(),
+      new WalletConnectWalletAdapter({
+        network: WalletAdapterNetwork.Mainnet,
+        options: {
+          projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
+        },
+      }),
+      new LedgerWalletAdapter(),
+    ],
+    []
+  );
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
@@ -81,7 +136,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             appName: 'Vaulto Swap',
           }}
         >
-          {children}
+          <SolanaWalletProvider>
+            {children}
+          </SolanaWalletProvider>
           <Toaster
             position="bottom-right"
             toastOptions={{
