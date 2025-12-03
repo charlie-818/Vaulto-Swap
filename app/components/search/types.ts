@@ -38,6 +38,16 @@ export interface LiquidityTokenResult {
 }
 
 /**
+ * Solana token data response
+ */
+export interface SolanaTokenData {
+  address: string;
+  tvlUSD?: number;
+  volumeUSD: number; // 24h volume
+  marketCap?: number;
+}
+
+/**
  * API response format for liquidity search
  */
 export interface LiquidityApiResponse {
@@ -45,6 +55,7 @@ export interface LiquidityApiResponse {
   tokens: LiquidityTokenResult[];
   error?: string;
 }
+
 
 
 

@@ -15,7 +15,7 @@ interface Token {
 export default function JupiterWidgetWrapper() {
   const [isMounted, setIsMounted] = useState(false);
   const [isJupiterLoaded, setIsJupiterLoaded] = useState(false);
-  const [fixedMint, setFixedMint] = useState<string>('So11111111111111111111111111111111111111112');
+  const [fixedMint, setFixedMint] = useState<string>('PreweJYECqtQwBtpxHL171nL2K6umo692gTm7Q3rpgF'); // OpenAI address - default for private market
   const containerRef = useRef<HTMLDivElement>(null);
   const jupiterInitializedRef = useRef(false);
   
@@ -94,7 +94,7 @@ export default function JupiterWidgetWrapper() {
           displayMode: 'integrated',
           integratedTargetId: 'jupiter-widget-container',
           containerStyles: {
-            width: '100%', // Match CowSwap width (responsive)
+            width: '100%', // 100% of the container (which is 30% of parent)
             height: '500px', // Match CowSwap height
             borderRadius: '0px', // Match CowSwap (no border radius in container)
           },
@@ -109,6 +109,8 @@ export default function JupiterWidgetWrapper() {
             initialOutputMint: fixedMint, // Match fixedMint to avoid validation error
             initialInputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC on Solana
             fixedMint: fixedMint,
+            referralAccount: 'BvGJDBvCQSixxQcgo24cjp4ZquEo1BDBZdQag9yqH3hC', // Referral fee recipient
+            referralFee: 50, // 50 BPS = 0.5%
           },
           
           // Custom Token List - ONLY these 5 tokens will be shown (replaces Jupiter's default tokens)
@@ -243,15 +245,27 @@ export default function JupiterWidgetWrapper() {
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4" ref={containerRef}>
-      <div className="w-full flex items-center justify-center min-h-[500px]">
+      <div className="w-full flex items-center justify-center min-h-[500px] relative">
+        {/* Background element behind widget with rounded corners */}
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 rounded-2xl"
+          style={{
+            width: '392px',
+            height: '500px',
+            bottom: '0px',
+            backgroundColor: 'rgb(31, 41, 55)', // Jupiter dark theme background color (matches --jupiter-plugin-background)
+            zIndex: 0,
+          }}
+        />
+        
         {!isJupiterLoaded && (
-          <div className="flex items-center justify-center min-h-[500px]">
+          <div className="flex items-center justify-center min-h-[500px] relative z-10">
             <div className="text-gray-400 text-sm">Loading Jupiter widget...</div>
           </div>
         )}
         <div
           id="jupiter-widget-container"
-          className={`w-full min-h-[500px] ${!isJupiterLoaded ? 'hidden' : ''}`}
+          className={`w-[70%] min-h-[500px] relative z-10 mx-auto ${!isJupiterLoaded ? 'hidden' : ''}`}
           style={{
             borderRadius: '0px', // Match CowSwap widget (no border radius)
             overflow: 'hidden',

@@ -492,7 +492,7 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
     
     return {
       "appCode": "Vaulto Swap", // Name of your app (max 50 characters)
-      "width": "100%", // Responsive width
+      "width": "392px", // Responsive width
       "height": "500px", // Optimized height for better mobile compatibility
       "chainId": cowChainId, // Dynamic chain based on user's connected chain
       "tokenLists": validatedTokenLists, // Validated token lists with fallback support
@@ -505,16 +505,18 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
         "asset": buyToken,
         "amount": "1"
       },
-    "enabledTradeTypes": [ // Enable all trade types
+    "enabledTradeTypes": [ // Enable only SWAP (LIMIT and TWAP disabled)
       TradeType.SWAP,
       TradeType.LIMIT,
-      TradeType.YIELD
+      TradeType.YIELD,
+      TradeType.ADVANCED,
+   
     ],
     "standaloneMode": false,
     "disableToastMessages": true,
     "disableProgressBar": false,
     "hideBridgeInfo": false,
-    "hideOrdersTable": false,
+    "hideOrdersTable": true, // Hide orders table to disable LIMIT/TWAP order management
     "hideLogo": false,
     "images": {
       // Only available image parameter: displays when orders table is empty
@@ -593,12 +595,26 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4" ref={widgetContainerRef}>
-      <div className="w-full flex items-center justify-center min-h-[500px]">
-        <CowSwapWidget 
-          key={widgetKey}
-          params={params} 
-          provider={provider} 
+      <div className="w-full flex items-center justify-center min-h-[500px] relative">
+        {/* Background element behind widget with rounded corners */}
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 rounded-2xl"
+          style={{
+            width: '392px',
+            height: '500px',
+            bottom: '0px',
+            backgroundColor: 'rgb(31, 41, 55)', // Dark theme background color (matches Jupiter)
+            zIndex: 0,
+          }}
         />
+        
+        <div className="w-[35%] min-h-[500px] relative z-10 mx-auto flex items-center justify-center">
+          <CowSwapWidget 
+            key={widgetKey}
+            params={params} 
+            provider={provider} 
+          />
+        </div>
       </div>
     </div>
   );

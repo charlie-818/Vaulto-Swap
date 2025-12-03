@@ -155,6 +155,7 @@ export async function fetchTokenPriceByAddress(
       10: 'optimistic-ethereum',
       8453: 'base',
       137: 'polygon-pos',
+      101: 'solana', // Solana mainnet
     };
 
     const platform = platformMap[chainId];
@@ -163,7 +164,9 @@ export async function fetchTokenPriceByAddress(
       return null;
     }
 
-    const normalizedAddress = address.toLowerCase();
+    // Solana addresses use base58 encoding and are case-sensitive, don't lowercase them
+    // For other chains (Ethereum-based), addresses should be lowercase
+    const normalizedAddress = chainId === 101 ? address : address.toLowerCase();
 
     const response = await fetch(
       `https://api.coingecko.com/api/v3/coins/${platform}/contract/${normalizedAddress}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`,

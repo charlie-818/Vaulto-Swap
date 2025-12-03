@@ -18,8 +18,9 @@ interface Token {
   decimals: number;
   logoURI?: string;
   chainId: number;
-  tvlUSD?: number; // Optional TVL from Uniswap
-  volumeUSD?: number; // Optional 24hr volume from Uniswap
+  tvlUSD?: number; // Optional TVL from Uniswap or liquidity pools
+  volumeUSD?: number; // Optional 24hr volume from Uniswap or trading data
+  marketCap?: number; // Optional market capitalization
   pools?: Array<{
     poolAddress: string;
     feeTierBps: number;
@@ -182,6 +183,39 @@ const fetchUniswapLiquidity = async (
       tokens: [],
       error: error instanceof Error ? error.message : 'Failed to fetch liquidity data',
     };
+  }
+};
+
+// Fetch Solana token data (liquidity, marketcap, volume) for token addresses
+const fetchSolanaTokenData = async (
+  addresses: string[]
+): Promise<Array<{ address: string; tvlUSD?: number; volumeUSD: number; marketCap?: number }>> => {
+  if (addresses.length === 0) {
+    return [];
+  }
+
+  try {
+    const response = await fetch('/api/solana/token-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ addresses }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.tokens || [];
+  } catch (error) {
+    console.error('Error fetching Solana token data:', error);
+    return addresses.map((address) => ({
+      address,
+      volumeUSD: 0,
+    }));
   }
 };
 
@@ -725,9 +759,46 @@ export default function TokenSearch({ chainId, activeTab = 'public' }: TokenSear
   useEffect(() => {
     // For private tab, use private tokens only
     if (activeTab === 'private') {
-      setTokens(privateTokens);
-      fetchTokenLogos(privateTokens);
-      setIsLoading(false);
+      const fetchPrivateTokensWithData = async () => {
+        setIsLoading(true);
+        // Set tokens first to show them immediately
+        setTokens(privateTokens);
+        fetchTokenLogos(privateTokens);
+        
+        // Fetch liquidity/marketcap data for private tokens
+        try {
+          const addresses = privateTokens.map((token) => token.address);
+          const tokenData = await fetchSolanaTokenData(addresses);
+          
+          // Create a map for quick lookup
+          const dataMap = new Map(
+            tokenData.map((data) => [data.address, data])
+          );
+          
+          // Enrich private tokens with fetched data
+          const enrichedTokens = privateTokens.map((token) => {
+            const data = dataMap.get(token.address);
+            if (data) {
+              return {
+                ...token,
+                tvlUSD: data.tvlUSD,
+                volumeUSD: data.volumeUSD,
+                marketCap: data.marketCap,
+              };
+            }
+            return token;
+          });
+          
+          setTokens(enrichedTokens);
+        } catch (error) {
+          console.error('Error enriching private tokens with data:', error);
+          // Continue with unenriched tokens on error
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchPrivateTokensWithData();
       return;
     }
 
@@ -939,14 +1010,19 @@ export default function TokenSearch({ chainId, activeTab = 'public' }: TokenSear
       if (!searchQuery.trim()) {
         // Show all private tokens when search is open but no query
         if (isOpen) {
-          setFilteredTokens(privateTokens);
+          // Use tokens state which has enriched data, but filter to only private tokens
+          const privateTokenAddresses = new Set(privateTokens.map(t => t.address));
+          const enrichedPrivateTokens = tokens.filter(t => privateTokenAddresses.has(t.address));
+          setFilteredTokens(enrichedPrivateTokens);
         } else {
           setFilteredTokens([]);
         }
       } else {
-        // Filter private tokens by name/symbol
+        // Filter private tokens by name/symbol from enriched tokens
         const query = searchQuery.trim().toLowerCase();
-        const filtered = privateTokens.filter(token => 
+        const privateTokenAddresses = new Set(privateTokens.map(t => t.address));
+        const enrichedPrivateTokens = tokens.filter(t => privateTokenAddresses.has(t.address));
+        const filtered = enrichedPrivateTokens.filter(token => 
           token.name.toLowerCase().includes(query) || 
           token.symbol.toLowerCase().includes(query)
         );
@@ -1415,12 +1491,66 @@ export default function TokenSearch({ chainId, activeTab = 'public' }: TokenSear
                       </div>
                       <div className="flex-1 min-w-0">
                         {activeTab === 'private' ? (
-                          // Simplified display for private tokens
+                          // Display for private tokens with liquidity/marketcap data
                           <>
                             <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
                               <div className="text-white text-base md:text-sm font-medium">
                                 {token.name}
                               </div>
+                              <div className="flex items-center gap-1">
+                                {(() => {
+                                  // Show liquidity (TVL) from Jupiter if available
+                                  const tvlValue = token.tvlUSD;
+                                  const hasTVL = tvlValue !== undefined && tvlValue > 0;
+                                  
+                                  if (hasTVL) {
+                                    return (
+                                      <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                        {formatTVL(tvlValue)} <span className="text-[9px] text-white">TVL</span>
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                                {(() => {
+                                  // Show market cap from CoinGecko if available
+                                  const marketCapValue = token.marketCap;
+                                  const hasMarketCap = marketCapValue !== undefined && marketCapValue > 0;
+                                  
+                                  if (hasMarketCap) {
+                                    return (
+                                      <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                        {formatTVL(marketCapValue)} <span className="text-[9px] text-white">MCap</span>
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-1">
+                              <a
+                                href={`https://prestocks.com/${token.name.toLowerCase()}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-gray-400 text-sm md:text-xs hover:text-yellow-400 transition-colors"
+                              >
+                                Prestock {token.name}
+                              </a>
+                              {(() => {
+                                const displayVolume = token.volumeUSD;
+                                const hasVolume = displayVolume !== undefined && displayVolume > 0;
+                                
+                                if (hasVolume) {
+                                  return (
+                                    <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                      {formatTVL(displayVolume)} <span className="text-[9px] text-white">24h</span>
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                             <div className="flex items-center justify-between gap-1 md:gap-2">
                               <div className="flex items-center gap-1 md:gap-2">
@@ -1483,7 +1613,28 @@ export default function TokenSearch({ chainId, activeTab = 'public' }: TokenSear
                                   </a>
                                 </div>
                               </div>
-                              <span className="text-gray-500 text-xs">Solana</span>
+                              {(() => {
+                                const displayVolume = token.volumeUSD;
+                                const hasVolume = displayVolume !== undefined && displayVolume > 0;
+                                
+                                if (hasVolume) {
+                                  return (
+                                    <a
+                                      href={`https://www.jup.ag/tokens/${token.address}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                      className="inline-flex items-center justify-center h-4 px-2 text-[10px] font-semibold bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-gray-800 rounded transition-all duration-200 shadow-sm shadow-yellow-500/25"
+                                      title="View Jupiter price chart"
+                                    >
+                                      <span>More Info</span>
+                                    </a>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                           </>
                         ) : (
