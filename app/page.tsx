@@ -348,7 +348,7 @@ export default function Home() {
               Vaulto
             </h2>
             <p className="text-white text-base sm:text-lg md:text-xl lg:text-2xl font-light mb-6 md:mb-0">
-              Trade Stocks 24/7
+              Trade Equities 24/7
             </p>
           </div>
           
