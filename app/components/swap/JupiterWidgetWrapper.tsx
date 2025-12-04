@@ -109,8 +109,6 @@ export default function JupiterWidgetWrapper() {
             initialOutputMint: fixedMint, // Match fixedMint to avoid validation error
             initialInputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC on Solana
             fixedMint: fixedMint,
-            referralAccount: 'BvGJDBvCQSixxQcgo24cjp4ZquEo1BDBZdQag9yqH3hC', // Referral fee recipient
-            referralFee: 50, // 50 BPS = 0.5%
           },
           
           // Custom Token List - ONLY these 5 tokens will be shown (replaces Jupiter's default tokens)
@@ -248,11 +246,8 @@ export default function JupiterWidgetWrapper() {
       <div className="w-full flex items-center justify-center min-h-[500px] relative">
         {/* Background element behind widget with rounded corners */}
         <div 
-          className="absolute left-1/2 -translate-x-1/2 rounded-2xl"
+          className="absolute -top-2 bottom-0 w-[35%] left-1/2 -translate-x-1/2 rounded-2xl"
           style={{
-            width: '392px',
-            height: '500px',
-            bottom: '0px',
             backgroundColor: 'rgb(31, 41, 55)', // Jupiter dark theme background color (matches --jupiter-plugin-background)
             zIndex: 0,
           }}

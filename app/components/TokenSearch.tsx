@@ -21,6 +21,7 @@ interface Token {
   tvlUSD?: number; // Optional TVL from Uniswap or liquidity pools
   volumeUSD?: number; // Optional 24hr volume from Uniswap or trading data
   marketCap?: number; // Optional market capitalization
+  marketCapFormatted?: string; // Formatted market cap from Jupiter (e.g., "$472B")
   pools?: Array<{
     poolAddress: string;
     feeTierBps: number;
@@ -189,7 +190,7 @@ const fetchUniswapLiquidity = async (
 // Fetch Solana token data (liquidity, marketcap, volume) for token addresses
 const fetchSolanaTokenData = async (
   addresses: string[]
-): Promise<Array<{ address: string; tvlUSD?: number; volumeUSD: number; marketCap?: number }>> => {
+): Promise<Array<{ address: string; tvlUSD?: number; volumeUSD: number; marketCap?: number; marketCapFormatted?: string }>> => {
   if (addresses.length === 0) {
     return [];
   }
@@ -784,6 +785,7 @@ export default function TokenSearch({ chainId, activeTab = 'public' }: TokenSear
                 tvlUSD: data.tvlUSD,
                 volumeUSD: data.volumeUSD,
                 marketCap: data.marketCap,
+                marketCapFormatted: data.marketCapFormatted,
               };
             }
             return token;
@@ -1513,11 +1515,19 @@ export default function TokenSearch({ chainId, activeTab = 'public' }: TokenSear
                                   return null;
                                 })()}
                                 {(() => {
-                                  // Show market cap from CoinGecko if available
+                                  // Show market cap - prioritize Jupiter formatted value, fall back to CoinGecko
+                                  const marketCapFormatted = token.marketCapFormatted;
                                   const marketCapValue = token.marketCap;
-                                  const hasMarketCap = marketCapValue !== undefined && marketCapValue > 0;
                                   
-                                  if (hasMarketCap) {
+                                  if (marketCapFormatted) {
+                                    // Display Jupiter's formatted value with MCap label (e.g., "$472B MCap")
+                                    return (
+                                      <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
+                                        {marketCapFormatted} <span className="text-[9px] text-white">MCap</span>
+                                      </span>
+                                    );
+                                  } else if (marketCapValue !== undefined && marketCapValue > 0) {
+                                    // Fall back to formatted CoinGecko value with MCap label
                                     return (
                                       <span className="px-1 py-0.25 text-[10px] font-medium bg-yellow-400/20 text-yellow-400 rounded flex-shrink-0">
                                         {formatTVL(marketCapValue)} <span className="text-[9px] text-white">MCap</span>

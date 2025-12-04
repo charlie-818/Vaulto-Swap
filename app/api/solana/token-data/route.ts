@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchTokenPriceByAddress } from '@/lib/api/coingecko';
+import * as cheerio from 'cheerio';
 
 export interface SolanaTokenDataResponse {
   chainId: number;
@@ -8,8 +9,113 @@ export interface SolanaTokenDataResponse {
     tvlUSD?: number;
     volumeUSD: number; // 24h volume
     marketCap?: number;
+    marketCapFormatted?: string; // Formatted market cap from Jupiter (e.g., "$472B")
   }>;
   error?: string;
+}
+
+/**
+ * Format market cap number to Jupiter's format (e.g., $472B)
+ */
+function formatMarketCap(value: number): string {
+  if (value >= 1_000_000_000_000) {
+    return `$${(value / 1_000_000_000_000).toFixed(0)}T`;
+  }
+  if (value >= 1_000_000_000) {
+    return `$${(value / 1_000_000_000).toFixed(0)}B`;
+  }
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(0)}M`;
+  }
+  if (value >= 1_000) {
+    return `$${(value / 1_000).toFixed(0)}K`;
+  }
+  return `$${value.toFixed(0)}`;
+}
+
+/**
+ * Fetch market cap from Jupiter token page HTML
+ * Parses the HTML to extract the market cap value from __NEXT_DATA__ script tag
+ * Falls back to searching for "Stock MC" button element if needed
+ */
+async function fetchJupiterMarketCap(tokenAddress: string): Promise<string | null> {
+  try {
+    const url = `https://www.jup.ag/tokens/${tokenAddress}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    });
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch Jupiter page for ${tokenAddress}: ${response.status}`);
+      return null;
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Strategy 1: Extract from __NEXT_DATA__ script tag (most reliable for SSR pages)
+    const nextDataScript = $('script#__NEXT_DATA__');
+    if (nextDataScript.length > 0) {
+      try {
+        const nextDataText = nextDataScript.html();
+        if (nextDataText) {
+          const nextData = JSON.parse(nextDataText);
+          
+          // Navigate through the data structure to find stockData.mcap
+          const pageProps = nextData?.props?.pageProps;
+          if (pageProps) {
+            const dehydratedState = pageProps?.dehydratedState;
+            if (dehydratedState) {
+              const queries = dehydratedState?.queries || [];
+              
+              // Search through all queries for stockData.mcap
+              for (const query of queries) {
+                const data = query?.state?.data;
+                if (data?.stockData?.mcap) {
+                  const mcap = data.stockData.mcap;
+                  if (typeof mcap === 'number' && mcap > 0) {
+                    const formatted = formatMarketCap(mcap);
+                    return formatted;
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (parseError) {
+        console.warn(`Error parsing __NEXT_DATA__ for ${tokenAddress}:`, parseError);
+        // Continue to fallback strategies
+      }
+    }
+
+    // Strategy 2: Find the button element containing "Stock MC" text (for client-rendered content)
+    const stockMCButton = $('button').filter((_, el) => {
+      const buttonText = $(el).text();
+      return buttonText.includes('Stock MC');
+    }).first();
+
+    if (stockMCButton.length > 0) {
+      // Find the span with translate="no" attribute within the button
+      const marketCapSpan = stockMCButton.find('span[translate="no"]').first();
+
+      if (marketCapSpan.length > 0) {
+        const marketCapValue = marketCapSpan.text().trim();
+        
+        if (marketCapValue && marketCapValue !== '$0') {
+          return marketCapValue;
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Error fetching Jupiter market cap for ${tokenAddress}:`, error);
+    return null;
+  }
 }
 
 /**
@@ -146,11 +252,14 @@ export async function POST(request: NextRequest) {
           // Fetch liquidity from Jupiter (primary source for TVL)
           const jupiterLiquidity = await fetchJupiterLiquidity(address);
           
+          // Fetch market cap from Jupiter HTML (prioritized for private tokens)
+          const jupiterMarketCapFormatted = await fetchJupiterMarketCap(address);
+          
           // Fetch CoinGecko data for volume (24h trading volume)
           const coingeckoData = await fetchTokenPriceByAddress(101, address);
 
           // Build response with liquidity from Jupiter and volume from CoinGecko
-          const result: { address: string; tvlUSD?: number; volumeUSD: number; marketCap?: number } = {
+          const result: { address: string; tvlUSD?: number; volumeUSD: number; marketCap?: number; marketCapFormatted?: string } = {
             address,
             volumeUSD: coingeckoData?.total_volume || 0,
           };
@@ -160,8 +269,10 @@ export async function POST(request: NextRequest) {
             result.tvlUSD = jupiterLiquidity;
           }
 
-          // Keep marketCap for reference (not displayed, but available)
-          if (coingeckoData?.market_cap) {
+          // Prioritize Jupiter's formatted market cap, fall back to CoinGecko
+          if (jupiterMarketCapFormatted) {
+            result.marketCapFormatted = jupiterMarketCapFormatted;
+          } else if (coingeckoData?.market_cap) {
             result.marketCap = coingeckoData.market_cap;
           }
 

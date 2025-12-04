@@ -41,12 +41,14 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   const [buyToken, setBuyToken] = useState<string>('NVDAon');
   // Track widget initialization per chainId to prevent token list reloading
   const widgetInitializedRef = useRef<Set<number>>(new Set());
-  // Validated token list URLs - starts with defaults, updated after validation
-  const [validatedTokenLists, setValidatedTokenLists] = useState<string[]>([
+  // Token list URLs - use defaults immediately, update in background if validation succeeds
+  // Start with defaults to render widget immediately (non-blocking)
+  const [tokenLists, setTokenLists] = useState<string[]>([
     'https://vaulto.dev/api/token-list/',
     'https://ipfs.io/ipns/tokens.uniswap.org',
   ]);
-  const [isValidatingTokenLists, setIsValidatingTokenLists] = useState(true);
+  // Track if token list validation has been attempted (to prevent multiple attempts)
+  const tokenListValidationAttemptedRef = useRef(false);
 
   // Map wagmi chain IDs to CoW Swap supported chains
   const getCowChainId = useCallback((wagmiChainId: number): number => {
@@ -369,60 +371,52 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
     }
   }, [isConnected, address, chainId, provider, connector, connectorClient, isMounted, getCowChainId]);
 
-  // Validate token lists on mount and when chainId changes
+  // Validate token lists in background (non-blocking) - only once
   useEffect(() => {
-    if (!isMounted || typeof window === 'undefined') return;
+    if (!isMounted || typeof window === 'undefined' || tokenListValidationAttemptedRef.current) return;
 
-    let isCancelled = false;
+    // Mark as attempted immediately to prevent multiple runs
+    tokenListValidationAttemptedRef.current = true;
 
+    // Run validation in background - don't block widget render
     const validateTokenLists = async () => {
-      setIsValidatingTokenLists(true);
-      console.log('CowSwap Widget - Validating token lists...', {
-        chainId: getCowChainId(chainId),
-        isConnected,
-      });
-
       try {
         const validatedUrls = await getCowSwapTokenLists();
 
-        if (!isCancelled) {
-          if (validatedUrls.length > 0) {
-            setValidatedTokenLists(validatedUrls);
-            console.log('CowSwap Widget - Token lists validated successfully:', {
+        if (validatedUrls.length > 0) {
+          // Only update if URLs are different (prevent unnecessary re-renders)
+          const defaultUrls = [
+            'https://vaulto.dev/api/token-list/',
+            'https://ipfs.io/ipns/tokens.uniswap.org',
+          ];
+          const urlsChanged = 
+            validatedUrls.length !== defaultUrls.length ||
+            validatedUrls.some((url, idx) => url !== defaultUrls[idx]);
+          
+          if (urlsChanged) {
+            // Update token lists in background if validation succeeds and URLs changed
+            setTokenLists(validatedUrls);
+            console.log('CowSwap Widget - Token lists validated and updated:', {
               count: validatedUrls.length,
               urls: validatedUrls,
             });
           } else {
-            // Keep default URLs if validation fails (widget will handle gracefully)
-            console.warn(
-              'CowSwap Widget - Token list validation failed, using default URLs'
-            );
-            setValidatedTokenLists([
-              'https://vaulto.dev/api/token-list/',
-              'https://ipfs.io/ipns/tokens.uniswap.org',
-            ]);
+            console.log('CowSwap Widget - Token lists validated (no changes needed)');
           }
-          setIsValidatingTokenLists(false);
+        } else {
+          console.warn(
+            'CowSwap Widget - Token list validation failed, keeping default URLs'
+          );
         }
       } catch (error) {
-        if (!isCancelled) {
-          console.error('CowSwap Widget - Error validating token lists:', error);
-          // Keep default URLs on error
-          setValidatedTokenLists([
-            'https://vaulto.dev/api/token-list/',
-            'https://ipfs.io/ipns/tokens.uniswap.org',
-          ]);
-          setIsValidatingTokenLists(false);
-        }
+        console.error('CowSwap Widget - Error validating token lists (using defaults):', error);
+        // Keep default URLs on error - widget already rendered with them
       }
     };
 
-    validateTokenLists();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [isMounted, chainId, isConnected, getCowChainId]);
+    // Delay validation slightly to let widget render first
+    setTimeout(validateTokenLists, 100);
+  }, [isMounted]);
 
   // Handle token selection from header search
   const handleTokenSelect = useCallback((token: Token, type: 'sell' | 'buy') => {
@@ -475,18 +469,9 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   // Create params object with current token state
   // Note: params should be stable and not recalculate when isConnected changes
   // to prevent widget from reloading token lists
+  // Token lists are stable - updates happen in background without remounting widget
   const params: CowSwapWidgetParams = useMemo(() => {
-    console.log('Creating widget params:', {
-      sellToken,
-      buyToken,
-      chainId: cowChainId,
-      tokenLists: validatedTokenLists,
-      isValidating: isValidatingTokenLists,
-    });
-    
-    // Construct absolute URL for images to ensure widget can access them
-    // Note: CowSwapWidgetImages interface only supports one property: "emptyOrders"
-    // This is the image displayed when the orders table is empty (no orders yet)
+    // Construct absolute URL for images (computed inside useMemo to keep it stable)
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     const mobileLogoUrl = `${baseUrl}/mobilelogo.png`;
     
@@ -495,7 +480,7 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
       "width": "392px", // Responsive width
       "height": "500px", // Optimized height for better mobile compatibility
       "chainId": cowChainId, // Dynamic chain based on user's connected chain
-      "tokenLists": validatedTokenLists, // Validated token lists with fallback support
+      "tokenLists": tokenLists, // Token lists (defaults first, updated in background)
       "tradeType": TradeType.SWAP, // Default to SWAP
       "sell": { // Sell token from search selection
         "asset": sellToken,  
@@ -505,18 +490,17 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
         "asset": buyToken,
         "amount": "1"
       },
-    "enabledTradeTypes": [ // Enable only SWAP (LIMIT and TWAP disabled)
+    "enabledTradeTypes": [ // Enable all trade types
       TradeType.SWAP,
       TradeType.LIMIT,
       TradeType.YIELD,
-      TradeType.ADVANCED,
    
     ],
     "standaloneMode": false,
     "disableToastMessages": true,
     "disableProgressBar": false,
     "hideBridgeInfo": false,
-    "hideOrdersTable": true, // Hide orders table to disable LIMIT/TWAP order management
+    "hideOrdersTable": false,
     "hideLogo": false,
     "images": {
       // Only available image parameter: displays when orders table is empty
@@ -570,7 +554,7 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
       "success": "#10b981", // emerald-500
     }
     };
-  }, [sellToken, buyToken, cowChainId, validatedTokenLists]);
+  }, [sellToken, buyToken, cowChainId, tokenLists]);
 
   // Create a stable widget key that only changes when chainId, sellToken, or buyToken changes
   // This prevents the widget from remounting when wallet connects/disconnects
@@ -596,24 +580,29 @@ export default function CowSwapWidgetWrapper({ onTokenSelect }: CowSwapWidgetWra
   return (
     <div className="w-full max-w-6xl mx-auto px-4" ref={widgetContainerRef}>
       <div className="w-full flex items-center justify-center min-h-[500px] relative">
-        {/* Background element behind widget with rounded corners */}
-        <div 
-          className="absolute left-1/2 -translate-x-1/2 rounded-2xl"
-          style={{
-            width: '392px',
-            height: '500px',
-            bottom: '0px',
-            backgroundColor: 'rgb(31, 41, 55)', // Dark theme background color (matches Jupiter)
-            zIndex: 0,
-          }}
-        />
-        
-        <div className="w-[35%] min-h-[500px] relative z-10 mx-auto flex items-center justify-center">
-          <CowSwapWidget 
-            key={widgetKey}
-            params={params} 
-            provider={provider} 
+        {/* Container for both background shape and widget - ensures they're perfectly aligned */}
+        <div className="relative" style={{ width: '392px', minHeight: '500px' }}>
+          {/* Background element behind widget with rounded corners - fixed size */}
+          <div 
+            className="absolute rounded-2xl"
+            style={{
+              width: '392px',
+              height: '500px',
+              top: '0',
+              left: '0',
+              backgroundColor: 'rgb(31, 41, 55)', // Dark theme background color (matches Jupiter)
+              zIndex: 0,
+            }}
           />
+          
+          {/* Widget container - positioned on top of background */}
+          <div className="relative z-10 w-full">
+            <CowSwapWidget 
+              key={widgetKey}
+              params={params} 
+              provider={provider} 
+            />
+          </div>
         </div>
       </div>
     </div>
