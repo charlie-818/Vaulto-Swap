@@ -178,7 +178,7 @@ export default function JupiterWidgetWrapper() {
     } catch (error) {
       console.error('Error syncing Jupiter wallet passthrough:', error);
     }
-  }, [isMounted, isJupiterLoaded, passthroughWalletContextState.connected, passthroughWalletContextState.publicKey]);
+  }, [isMounted, isJupiterLoaded, passthroughWalletContextState]);
 
   // Handle token selection from header search
   const handleTokenSelect = useCallback((token: Token, type: 'sell' | 'buy') => {

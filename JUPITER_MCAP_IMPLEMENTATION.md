@@ -110,3 +110,4 @@ Values are rounded to whole numbers (no decimals).
 - [ ] Support for more token types
 - [ ] Fallback to alternative data sources
 
+
